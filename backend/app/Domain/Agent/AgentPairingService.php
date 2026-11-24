@@ -12,12 +12,46 @@ use Illuminate\Validation\ValidationException;
 class AgentPairingService
 {
     /**
-     * Generate a new 6-digit pairing code for an agent in a shop with a 5-minute TTL.
+     * Generate a new 6-digit pairing code for an agent in a shop with a 15-minute TTL.
      */
-    public function generatePairingCode(Shop $shop, ?string $deviceName = null): array
+    public function generatePairingCode(Shop $shop, ?string $deviceName = null, bool $regenerate = false): array
     {
+        // If not explicitly regenerating, check if this shop already has an active pending pairing code with >60s remaining
+        if (! $regenerate) {
+            $existing = PrintAgent::withoutTenant()
+                ->where('shop_id', $shop->id)
+                ->whereNotNull('pairing_code')
+                ->where('status', 'offline')
+                ->where(function ($q) {
+                    $q->where('pairing_code_expires_at', '>', now()->addSeconds(60))
+                      ->orWhere('pairing_expires_at', '>', now()->addSeconds(60));
+                })
+                ->latest()
+                ->first();
+
+            if ($existing) {
+                $expiresAt = $existing->pairing_code_expires_at ?? $existing->pairing_expires_at;
+                $remaining = max(10, (int) now()->diffInSeconds($expiresAt));
+
+                return [
+                    'agent_id' => $existing->id,
+                    'pairing_code' => $existing->pairing_code,
+                    'expires_at' => $expiresAt->toIso8601String(),
+                    'expires_in_seconds' => $remaining,
+                ];
+            }
+        }
+
+        // Clean up previous pending offline pairing requests for this shop
+        PrintAgent::withoutTenant()
+            ->where('shop_id', $shop->id)
+            ->whereNotNull('pairing_code')
+            ->where('status', 'offline')
+            ->delete();
+
         $code = str_pad((string) random_int(100000, 999999), 6, '0', STR_PAD_LEFT);
-        $expiresAt = now()->addMinutes(5);
+        $ttlMinutes = 15;
+        $expiresAt = now()->addMinutes($ttlMinutes);
 
         $agent = PrintAgent::create([
             'tenant_id' => $shop->tenant_id,
@@ -39,7 +73,7 @@ class AgentPairingService
             'agent_id' => $agent->id,
             'pairing_code' => $code,
             'expires_at' => $expiresAt->toIso8601String(),
-            'expires_in_seconds' => 300,
+            'expires_in_seconds' => $ttlMinutes * 60,
         ];
     }
 

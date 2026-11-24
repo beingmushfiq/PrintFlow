@@ -29,9 +29,10 @@ class AgentPairingController extends Controller
             );
         }
 
-        $codeData = $pairingService->generatePairingCode($shop, $request->input('device_name'));
+        $regenerate = (bool) $request->input('regenerate', false);
+        $codeData = $pairingService->generatePairingCode($shop, $request->input('device_name'), $regenerate);
         if (! isset($codeData['expires_in_seconds'])) {
-            $codeData['expires_in_seconds'] = 600;
+            $codeData['expires_in_seconds'] = 900;
         }
 
         return ApiResponse::success($codeData, [], Response::HTTP_CREATED);

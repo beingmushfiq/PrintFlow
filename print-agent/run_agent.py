@@ -380,6 +380,10 @@ def main():
             print(f"Saved to: {CONFIG_FILE.resolve()}\n")
         except Exception as e:
             print(f"\n[Pairing Failed] {e}")
+            if "invalid or has expired" in str(e).lower() or "422" in str(e):
+                print("\n[Tip] The 6-digit pairing code has expired or was refreshed.")
+                print("      1. In your Owner Dashboard (http://localhost:5173/owner/dashboard), click 'Regenerate PIN'")
+                print("      2. Copy the active code and run: python run_agent.py --pair <NEW-PIN>\n")
             sys.exit(1)
 
     try:

@@ -36,18 +36,21 @@ export const AgentPairingModal: React.FC<AgentPairingModalProps> = ({ isOpen, on
   const pythonCommand = `python d:\\PrintFlow\\print-agent\\run_agent.py --pair ${pairingCode || '<PIN>'}`;
   const batCommand = `d:\\PrintFlow\\print-agent\\run-agent.bat ${pairingCode || '<PIN>'}`;
 
-  const fetchPairingCode = async () => {
+  const fetchPairingCode = async (regenerate: boolean = false) => {
     setLoading(true);
     setError(null);
     setPairedAgentName(null);
     try {
       const res = await apiRequest('/owner/agents/pairing-code', {
         method: 'POST',
-        body: JSON.stringify({ device_name: 'Counter-WinStation' }),
+        body: JSON.stringify({
+          device_name: 'Counter-WinStation',
+          regenerate,
+        }),
       });
       if (res.data?.pairing_code) {
         setPairingCode(res.data.pairing_code);
-        setSecondsRemaining(res.data.expires_in_seconds ?? 300);
+        setSecondsRemaining(res.data.expires_in_seconds ?? 900);
       }
     } catch (err: any) {
       setError(err?.message || 'Failed to generate pairing code');
@@ -58,7 +61,7 @@ export const AgentPairingModal: React.FC<AgentPairingModalProps> = ({ isOpen, on
 
   useEffect(() => {
     if (isOpen) {
-      fetchPairingCode();
+      fetchPairingCode(false);
     }
   }, [isOpen]);
 
@@ -306,7 +309,7 @@ export const AgentPairingModal: React.FC<AgentPairingModalProps> = ({ isOpen, on
         {/* Footer Actions */}
         <div className="p-4 border-t border-border bg-paper/50 flex items-center justify-between shrink-0">
           <button
-            onClick={fetchPairingCode}
+            onClick={() => fetchPairingCode(true)}
             disabled={loading}
             className="flex items-center space-x-1.5 px-3 py-2 rounded-xl border border-border bg-surface hover:bg-paper transition-colors text-xs font-semibold text-ink disabled:opacity-50"
           >
