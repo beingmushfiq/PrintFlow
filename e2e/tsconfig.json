@@ -8,11 +8,17 @@
     "skipLibCheck": true,
     "resolveJsonModule": true,
     "allowJs": true,
-    "checkJs": false
+    "checkJs": false,
+    "noEmit": true
   },
   "include": [
     "src/**/*",
     "tests/**/*",
     "run-e2e.js"
+  ],
+  "exclude": [
+    "node_modules",
+    "test-results"
   ]
 }
+

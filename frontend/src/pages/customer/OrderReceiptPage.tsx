@@ -2,6 +2,8 @@ import React, { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Printer, ArrowLeft, AlertCircle, CheckCircle } from 'lucide-react';
+import { Logo } from '../../components/common/Logo';
+import { usePageTitle } from '../../hooks/usePageTitle';
 import { formatMoney } from '../../lib/money';
 import { apiRequest } from '../../lib/api';
 import { toBengaliNumerals } from '../../lib/i18n';
@@ -36,8 +38,8 @@ interface ReceiptData {
 export const OrderReceiptPage: React.FC = () => {
   const { token } = useParams<{ token: string }>();
   const { t } = useTranslation();
-
   const [receipt, setReceipt] = useState<ReceiptData | null>(null);
+  usePageTitle({ subtitle: receipt ? `Receipt #${receipt.publicReference}` : 'Order Receipt' });
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -127,6 +129,7 @@ export const OrderReceiptPage: React.FC = () => {
       <div className="max-w-xl mx-auto bg-white rounded-2xl shadow-md border border-slate-200 p-8 space-y-6 receipt-container">
         {/* Receipt Header */}
         <div className="text-center space-y-1.5 border-b border-slate-200 pb-5">
+          <Logo variant="mark" size="sm" className="mx-auto mb-1" />
           <div className="text-xl font-black text-slate-900 tracking-tight uppercase">
             {receipt.shopName}
           </div>

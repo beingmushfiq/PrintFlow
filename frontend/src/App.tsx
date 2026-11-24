@@ -1,7 +1,9 @@
 import React from 'react';
 import { BrowserRouter, Routes, Route, Link, Navigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Printer, Globe, ShieldCheck, ArrowRight, Store, LogIn } from 'lucide-react';
+import { Globe, ShieldCheck, ArrowRight, Store, LogIn } from 'lucide-react';
+import { Logo } from './components/common/Logo';
+import { usePageTitle } from './hooks/usePageTitle';
 import { StorefrontPage } from './pages/customer/StorefrontPage';
 import { OrderStatusPage } from './pages/customer/OrderStatusPage';
 import { OrderReceiptPage } from './pages/customer/OrderReceiptPage';
@@ -18,6 +20,7 @@ import { ShopProfilePage } from './pages/owner/ShopProfilePage';
 
 export const LandingHome: React.FC = () => {
   const { t, i18n } = useTranslation(['common', 'storefront']);
+  usePageTitle();
 
   const toggleLanguage = () => {
     const nextLang = i18n.language.startsWith('bn') ? 'en' : 'bn';
@@ -31,9 +34,7 @@ export const LandingHome: React.FC = () => {
       {/* Header */}
       <header className="border-b border-border bg-surface px-6 py-4 flex items-center justify-between shadow-sm">
         <div className="flex items-center space-x-3">
-          <div className="w-10 h-10 rounded-lg bg-accent flex items-center justify-center text-white shadow-sm">
-            <Printer className="w-6 h-6" />
-          </div>
+          <Logo variant="mark" size="md" />
           <div>
             <h1 className="text-xl font-bold tracking-tight text-ink">
               {t('common:app_name')}

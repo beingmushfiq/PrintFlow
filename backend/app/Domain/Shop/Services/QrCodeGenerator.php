@@ -170,7 +170,19 @@ class QrCodeGenerator
 </head>
 <body>
     <div class="placard-container">
-        <div class="brand-badge">PrintFlow Instant Counter</div>
+        <div class="brand-badge">
+            <svg style="vertical-align: middle; margin-right: 6px; width: 16px; height: 16px; display: inline-block;" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <rect width="64" height="64" rx="15" fill="#FFFFFF"/>
+                <path d="M22 13C22 11.8954 22.8954 11 24 11H40C41.1046 11 42 11.8954 42 13V22H22V13Z" fill="#245BDB" fill-opacity="0.85"/>
+                <rect x="13" y="21" width="38" height="15" rx="4.5" fill="#0C1427"/>
+                <circle cx="18.5" cy="28.5" r="2" fill="#10B981"/>
+                <rect x="24" y="27.5" width="21" height="2" rx="1" fill="#FFFFFF" fill-opacity="0.35"/>
+                <path d="M17.5 29C17.5 28.4477 17.9477 28 18.5 28H45.5C46.0523 28 46.5 28.4477 46.5 29V44.5C46.5 46.433 44.933 48 43 48H21C19.067 48 17.5 46.433 17.5 44.5V29Z" fill="#245BDB"/>
+                <rect x="22" y="33.5" width="20" height="3" rx="1.5" fill="#FFFFFF"/>
+                <rect x="22" y="38.5" width="13" height="3" rx="1.5" fill="#00D2FF"/>
+            </svg>
+            <span>PrintFlow Instant Counter</span>
+        </div>
         <div class="shop-name">{$shopName}</div>
 
         <div class="instruction-en">Scan to upload &amp; print instantly</div>

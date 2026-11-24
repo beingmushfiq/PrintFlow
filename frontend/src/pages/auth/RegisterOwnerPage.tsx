@@ -1,12 +1,15 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Printer, Lock, Mail, User, Store, Loader2, AlertCircle } from 'lucide-react';
+import { Lock, Mail, User, Store, Loader2, AlertCircle } from 'lucide-react';
+import { Logo } from '../../components/common/Logo';
+import { usePageTitle } from '../../hooks/usePageTitle';
 import { PhoneIntake } from '../../components/PhoneIntake';
 import { apiRequest, setAuthToken } from '../../lib/api';
 
 export const RegisterOwnerPage: React.FC = () => {
   const { t } = useTranslation(['auth', 'common']);
+  usePageTitle({ subtitle: 'Register Print Shop' });
   const navigate = useNavigate();
 
   const [name, setName] = useState('');
@@ -57,9 +60,7 @@ export const RegisterOwnerPage: React.FC = () => {
   return (
     <div className="min-h-screen bg-paper flex flex-col justify-center py-10 sm:px-6 lg:px-8">
       <div className="sm:mx-auto sm:w-full sm:max-w-md text-center">
-        <div className="w-12 h-12 rounded-xl bg-accent flex items-center justify-center text-white mx-auto shadow-md">
-          <Printer className="w-7 h-7" />
-        </div>
+        <Logo variant="mark" size="xl" className="mx-auto" />
         <h2 className="mt-4 text-2xl font-extrabold text-ink tracking-tight">
           Create Print Shop Account
         </h2>

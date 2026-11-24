@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 64" fill="none">
+  <defs>
+    <linearGradient id="logo-grad" x1="6" y1="6" x2="54" y2="54" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#3B82F6"/>
+      <stop offset="50%" stop-color="#245BDB"/>
+      <stop offset="100%" stop-color="#14368B"/>
+    </linearGradient>
+    <linearGradient id="logo-cyan" x1="22" y1="38" x2="36" y2="38" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#00D2FF"/>
+      <stop offset="100%" stop-color="#0284C7"/>
+    </linearGradient>
+    <filter id="logo-shadow" x="12" y="24" width="40" height="28" filterUnits="userSpaceOnUse">
+      <feDropShadow dx="0" dy="2" stdDeviation="2" flood-color="#0A0E13" flood-opacity="0.25"/>
+    </filter>
+  </defs>
+
+  <!-- Brand Mark (Left Icon) -->
+  <g transform="translate(4, 4)">
+    <rect width="56" height="56" rx="14" fill="url(#logo-grad)"/>
+    <path d="M19.25 11.375C19.25 10.4085 20.0335 9.625 21 9.625H35C35.9665 9.625 36.75 10.4085 36.75 11.375V19.25H19.25V11.375Z" fill="#FFFFFF" fill-opacity="0.85"/>
+    <rect x="11.375" y="18.375" width="33.25" height="13.125" rx="3.9" fill="#0C1427"/>
+    <circle cx="16.1875" cy="24.9375" r="1.75" fill="#10B981"/>
+    <rect x="21" y="24.0625" width="18.375" height="1.75" rx="0.875" fill="#FFFFFF" fill-opacity="0.35"/>
+    <g filter="url(#logo-shadow)">
+      <path d="M15.3125 25.375C15.3125 24.8918 15.7043 24.5 16.1875 24.5H39.8125C40.2957 24.5 40.6875 24.8918 40.6875 25.375V38.9375C40.6875 40.6289 39.3164 42 37.625 42H18.375C16.6836 42 15.3125 40.6289 15.3125 38.9375V25.375Z" fill="#FFFFFF"/>
+    </g>
+    <rect x="19.25" y="29.3125" width="17.5" height="2.625" rx="1.3" fill="#245BDB"/>
+    <rect x="19.25" y="33.6875" width="11.375" height="2.625" rx="1.3" fill="url(#logo-cyan)"/>
+    <circle cx="34.125" cy="35" r="1.3" fill="#10B981"/>
+  </g>
+
+  <!-- Typography: PrintFlow -->
+  <text x="74" y="38" font-family="'Inter', system-ui, -apple-system, sans-serif" font-size="28" font-weight="800" letter-spacing="-0.5" fill="#121820">Print<tspan fill="#245BDB">Flow</tspan></text>
+  <!-- Active Autonomy Beacon Dot -->
+  <circle cx="204" cy="26" r="3" fill="#10B981"/>
+  <!-- Subtitle Tagline -->
+  <text x="75" y="49" font-family="'Inter', system-ui, -apple-system, sans-serif" font-size="8.5" font-weight="700" letter-spacing="1.8" fill="#667085" text-transform="uppercase">Autonomous Print Ops</text>
+</svg>

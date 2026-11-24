@@ -1,11 +1,14 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Printer, Lock, Mail, Loader2, AlertCircle } from 'lucide-react';
+import { Lock, Mail, Loader2, AlertCircle } from 'lucide-react';
+import { Logo } from '../../components/common/Logo';
+import { usePageTitle } from '../../hooks/usePageTitle';
 import { apiRequest, setAuthToken } from '../../lib/api';
 
 export const LoginPage: React.FC = () => {
   const { t } = useTranslation(['auth', 'common']);
+  usePageTitle({ subtitle: 'Owner Sign In' });
   const navigate = useNavigate();
 
   const [email, setEmail] = useState('');
@@ -38,9 +41,7 @@ export const LoginPage: React.FC = () => {
   return (
     <div className="min-h-screen bg-paper flex flex-col justify-center py-12 sm:px-6 lg:px-8">
       <div className="sm:mx-auto sm:w-full sm:max-w-md text-center">
-        <div className="w-12 h-12 rounded-xl bg-accent flex items-center justify-center text-white mx-auto shadow-md">
-          <Printer className="w-7 h-7" />
-        </div>
+        <Logo variant="mark" size="xl" className="mx-auto" />
         <h2 className="mt-4 text-2xl font-extrabold text-ink tracking-tight">
           Owner Operational Login
         </h2>

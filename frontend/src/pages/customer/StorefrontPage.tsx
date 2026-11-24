@@ -2,7 +2,6 @@ import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import {
-  Printer,
   ShieldCheck,
   MapPin,
   Phone,
@@ -13,6 +12,8 @@ import {
   Sparkles,
   ArrowLeft,
 } from 'lucide-react';
+import { Logo } from '../../components/common/Logo';
+import { usePageTitle } from '../../hooks/usePageTitle';
 import { PhoneIntake } from '../../components/PhoneIntake';
 import { FileUploadDropzone } from '../../components/FileUploadDropzone';
 import type { UploadFileItem } from '../../components/FileCard';
@@ -54,6 +55,7 @@ export const StorefrontPage: React.FC = () => {
   const { t, i18n } = useTranslation(['storefront', 'common']);
 
   const [shop, setShop] = useState<ShopData | null>(null);
+  usePageTitle({ prefixShopName: shop?.name });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -183,9 +185,7 @@ export const StorefrontPage: React.FC = () => {
       <header className="sticky top-0 z-20 bg-surface/95 backdrop-blur border-b border-border px-4 py-3 sm:px-6 shadow-sm">
         <div className="max-w-2xl mx-auto flex items-center justify-between">
           <div className="flex items-center space-x-2.5">
-            <div className="w-9 h-9 rounded-lg bg-accent flex items-center justify-center text-white shadow-sm">
-              <Printer className="w-5 h-5" />
-            </div>
+            <Logo variant="mark" size="sm" />
             <div>
               <span className="text-xs font-semibold uppercase tracking-wider text-accent block leading-none">
                 PrintFlow Counter

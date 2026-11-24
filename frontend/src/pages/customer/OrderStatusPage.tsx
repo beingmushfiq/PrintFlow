@@ -12,6 +12,8 @@ import {
   AlertCircle,
   RefreshCw,
 } from 'lucide-react';
+import { Logo } from '../../components/common/Logo';
+import { usePageTitle } from '../../hooks/usePageTitle';
 import { apiRequest } from '../../lib/api';
 
 interface OrderStatusData {
@@ -34,8 +36,8 @@ interface OrderStatusData {
 export const OrderStatusPage: React.FC = () => {
   const { token } = useParams<{ token: string }>();
   const { t } = useTranslation();
-
   const [order, setOrder] = useState<OrderStatusData | null>(null);
+  usePageTitle({ subtitle: order ? `Order #${order.reference}` : 'Order Tracking' });
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -113,6 +115,7 @@ export const OrderStatusPage: React.FC = () => {
       <div className="max-w-xl mx-auto space-y-6">
         {/* Header Banner */}
         <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 text-center space-y-2">
+          <Logo variant="mark" size="sm" className="mx-auto mb-2" />
           <span className="text-xs font-semibold tracking-wider uppercase text-indigo-600 bg-indigo-50 px-2.5 py-1 rounded-full">
             {order.shop_name}
           </span>

@@ -15,10 +15,13 @@ import {
   Menu,
   X,
 } from 'lucide-react';
+import { Logo } from '../common/Logo';
+import { usePageTitle } from '../../hooks/usePageTitle';
 import { getAuthToken, removeAuthToken, apiRequest } from '../../lib/api';
 
 export const OwnerLayout: React.FC = () => {
   const { t, i18n } = useTranslation(['common', 'owner']);
+  usePageTitle({ subtitle: 'Owner Console' });
   const location = useLocation();
   const navigate = useNavigate();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -82,11 +85,9 @@ export const OwnerLayout: React.FC = () => {
       {/* Sidebar for Desktop */}
       <aside className="hidden md:flex flex-col w-64 border-r border-border bg-surface shrink-0">
         <div className="p-5 border-b border-border flex items-center space-x-3">
-          <div className="w-10 h-10 rounded-xl bg-accent text-white flex items-center justify-center shadow-sm">
-            <Printer className="w-5 h-5" />
-          </div>
-          <div>
-            <h1 className="font-bold text-base leading-tight text-ink">{shopName}</h1>
+          <Logo variant="mark" size="md" />
+          <div className="min-w-0">
+            <h1 className="font-bold text-base leading-tight text-ink truncate">{shopName}</h1>
             <p className="text-xs text-muted">Owner Operations</p>
           </div>
         </div>
