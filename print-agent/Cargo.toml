@@ -1,0 +1,18 @@
+[package]
+name = "print-agent"
+version = "0.1.0"
+edition = "2021"
+description = "PrintFlow Windows Desktop Print Delivery and Hardware Agent"
+
+[dependencies]
+rusqlite = { version = "0.31", features = ["bundled"] }
+sha2 = "0.10"
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+reqwest = { version = "0.12", default-features = false, features = ["json", "rustls-tls", "blocking"] }
+rand = "0.8"
+chrono = { version = "0.4", features = ["serde"] }
+
+[dev-dependencies]
+tempfile = "3.10"
+
