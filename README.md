@@ -233,6 +233,22 @@ pnpm dev --port 5173
 - **Owner Operations Console:** `http://localhost:5173/owner`
 - **Owner Login:** `http://localhost:5173/login`
 
+#### 4. Running the Windows Print Agent (Hardware Integration)
+The desktop agent resides in **`d:\PrintFlow\print-agent`**. It connects your shop's physical USB/network printers to the cloud print queue:
+
+```bash
+# 1. Open Owner Dashboard -> Click "+ Pair New Agent" to generate a 6-digit PIN
+# 2. Run the agent runner from your counter PC:
+python d:\PrintFlow\print-agent\run_agent.py --pair <6-DIGIT-PIN>
+
+# Alternatively, double-click:
+d:\PrintFlow\print-agent\run-agent.bat
+
+# Or build and run the native Rust binary:
+cd d:\PrintFlow\print-agent && cargo run -- --pair <6-DIGIT-PIN>
+```
+> The agent automatically discovers installed Windows printers via native `winspool.drv`, syncs them to your dashboard, listens for print jobs, prints to paper, and securely shreds temporary files.
+
 ---
 
 ### Method 2: Running with Docker Compose

@@ -30,6 +30,14 @@
 # Rust / Cargo build artifacts
 /print-agent/target/
 **/target/
+/print-agent/agent_config.json
+/print-agent/print_journal.db
+/print-agent/*.tmp
+
+# Python artifacts
+__pycache__/
+*.pyc
+*.pyo
 
 # OS and Editor
 .DS_Store
