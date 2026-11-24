@@ -66,6 +66,7 @@ Route::get('/health', function () {
 */
 Route::prefix('public')->group(function () {
     Route::get('/storefront/{slug}', [StorefrontController::class, 'show']);
+    Route::get('/storefront/{slug}/qr', [StorefrontController::class, 'qrCode']);
     Route::post('/storefront/{slug}/order', [StorefrontController::class, 'createOrder']);
 
     Route::post('/upload/presign', [UploadController::class, 'presign']);

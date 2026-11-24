@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Api\Public;
 
 use App\Domain\Shared\Rules\BdPhone;
+use App\Domain\Shop\Services\QrCodeGenerator;
 use App\Http\Controllers\Controller;
 use App\Http\Responses\ApiResponse;
 use App\Models\Order;
@@ -12,6 +13,7 @@ use App\Models\OrderEvent;
 use App\Models\Shop;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 use Illuminate\Support\Str;
 
 class StorefrontController extends Controller
@@ -54,6 +56,55 @@ class StorefrontController extends Controller
                     ],
                 ],
             ],
+        ]);
+    }
+
+    /**
+     * Generate shop counter QR code in PNG, SVG, or styled A4/A5 PDF placard.
+     */
+    public function qrCode(Request $request, string $slug, QrCodeGenerator $generator): Response|JsonResponse
+    {
+        $shop = Shop::withoutTenant()->where('slug', $slug)->first();
+
+        if (! $shop) {
+            return ApiResponse::error([
+                [
+                    'code' => 'SHOP_NOT_FOUND',
+                    'message' => 'The requested print shop was not found.',
+                ],
+            ], 404);
+        }
+
+        $frontendUrl = rtrim(config('app.frontend_url', env('FRONTEND_URL', 'http://localhost:5173')), '/');
+        $storefrontUrl = "{$frontendUrl}/s/{$shop->slug}";
+
+        $format = strtolower($request->query('format', 'png'));
+
+        if ($format === 'svg') {
+            $svg = $generator->generateSvg($storefrontUrl);
+
+            return response($svg, 200, [
+                'Content-Type' => 'image/svg+xml',
+                'Content-Disposition' => 'inline; filename="'.$shop->slug.'-qr.svg"',
+            ]);
+        }
+
+        if ($format === 'pdf') {
+            $paperSize = $request->query('paper', 'a4');
+            $pdf = $generator->generatePlacardPdf($storefrontUrl, $shop->name, $paperSize);
+
+            return response($pdf, 200, [
+                'Content-Type' => 'application/pdf',
+                'Content-Disposition' => 'inline; filename="'.$shop->slug.'-placard.pdf"',
+            ]);
+        }
+
+        // Default: PNG 300 DPI
+        $png = $generator->generatePng($storefrontUrl, 14);
+
+        return response($png, 200, [
+            'Content-Type' => 'image/png',
+            'Content-Disposition' => 'inline; filename="'.$shop->slug.'-qr.png"',
         ]);
     }
 

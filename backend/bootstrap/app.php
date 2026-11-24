@@ -27,6 +27,7 @@ return Application::configure(basePath: dirname(__DIR__))
         apiPrefix: 'api/v1',
     )
     ->withMiddleware(function (Middleware $middleware) {
+        $middleware->redirectGuestsTo(fn () => null);
         $middleware->prepend(CorrelationIdMiddleware::class);
         $middleware->append(ResolveTenant::class);
         $middleware->alias([

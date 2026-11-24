@@ -108,9 +108,13 @@ export const ShopProfilePage: React.FC = () => {
     }
   };
 
+  const storefrontUrl = shop
+    ? `${window.location.origin}/s/${shop.slug}`
+    : (shop?.storefront_url || '');
+
   const copyStorefrontUrl = () => {
-    if (!shop) return;
-    navigator.clipboard.writeText(shop.storefront_url);
+    if (!storefrontUrl) return;
+    navigator.clipboard.writeText(storefrontUrl);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
@@ -123,7 +127,9 @@ export const ShopProfilePage: React.FC = () => {
     );
   }
 
-  const qrBaseUrl = `/api/v1/owner/shop/qr`;
+  const qrBaseUrl = shop?.slug
+    ? `/api/v1/public/storefront/${shop.slug}/qr`
+    : `/api/v1/owner/shop/qr`;
 
   return (
     <div className="min-h-screen bg-paper text-ink flex flex-col justify-between">
@@ -143,7 +149,7 @@ export const ShopProfilePage: React.FC = () => {
           <div className="flex items-center space-x-3">
             {shop && (
               <a
-                href={shop.storefront_url}
+                href={storefrontUrl}
                 target="_blank"
                 rel="noreferrer"
                 className="hidden sm:inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-lg border border-border text-xs font-semibold hover:bg-paper transition-colors"
@@ -284,6 +290,12 @@ export const ShopProfilePage: React.FC = () => {
                   src={`${qrBaseUrl}?format=png`}
                   alt="Shop Counter QR Code"
                   className="w-44 h-44 object-contain"
+                  onError={(e) => {
+                    const target = e.currentTarget;
+                    if (!target.src.includes('format=svg')) {
+                      target.src = `${qrBaseUrl}?format=svg`;
+                    }
+                  }}
                 />
               </div>
 
@@ -292,7 +304,7 @@ export const ShopProfilePage: React.FC = () => {
                   {shop?.name}
                 </span>
                 <div className="flex items-center justify-center space-x-1 text-[11px] text-muted">
-                  <span className="truncate max-w-[200px]">{shop?.storefront_url}</span>
+                  <span className="truncate max-w-[200px]">{storefrontUrl}</span>
                   <button
                     onClick={copyStorefrontUrl}
                     className="p-1 hover:text-accent rounded"
