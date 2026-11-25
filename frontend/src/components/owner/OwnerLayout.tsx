@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate, Outlet } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import { motion, AnimatePresence, LayoutGroup } from 'framer-motion';
 import {
   Printer,
   LayoutDashboard,
@@ -19,6 +20,8 @@ import {
 } from 'lucide-react';
 import { Logo } from '../common/Logo';
 import { DevCenterPointBadge } from '../common/DevCenterPointBadge';
+import { useSmoothScroll } from '../common/SmoothScrollProvider';
+import { MotionPage } from '../common/MotionPrimitives';
 import { usePageTitle } from '../../hooks/usePageTitle';
 import { getAuthToken, removeAuthToken, apiRequest } from '../../lib/api';
 
@@ -67,6 +70,17 @@ export const OwnerLayout: React.FC = () => {
   useEffect(() => {
     setMobileMenuOpen(false);
   }, [location.pathname]);
+
+  const { stopScroll, startScroll } = useSmoothScroll();
+
+  useEffect(() => {
+    if (mobileMenuOpen) {
+      stopScroll();
+    } else {
+      startScroll();
+    }
+    return () => startScroll();
+  }, [mobileMenuOpen, stopScroll, startScroll]);
 
   useEffect(() => {
     if (!mobileMenuOpen) return;
@@ -170,27 +184,35 @@ export const OwnerLayout: React.FC = () => {
         )}
 
         <nav className="flex-1 p-3 space-y-1 overflow-y-auto">
-          {navItems.map((item) => {
-            const Icon = item.icon;
-            const active = location.pathname.startsWith(item.path);
-            return (
-              <Link
-                key={item.path}
-                to={item.path}
-                title={sidebarCollapsed ? item.label : undefined}
-                className={`flex items-center rounded-xl font-medium text-sm transition-colors ${
-                  sidebarCollapsed ? 'justify-center px-2 py-2.5' : 'space-x-3 px-3 py-2.5'
-                } ${
-                  active
-                    ? 'bg-accent text-white shadow-sm'
-                    : 'text-ink/80 hover:bg-paper hover:text-ink'
-                }`}
-              >
-                <Icon className={`w-4 h-4 shrink-0 ${active ? 'text-white' : 'text-muted'}`} />
-                {!sidebarCollapsed && <span className="truncate">{item.label}</span>}
-              </Link>
-            );
-          })}
+          <LayoutGroup id="desktop-owner-nav">
+            {navItems.map((item) => {
+              const Icon = item.icon;
+              const active = location.pathname.startsWith(item.path);
+              return (
+                <Link
+                  key={item.path}
+                  to={item.path}
+                  title={sidebarCollapsed ? item.label : undefined}
+                  className={`relative flex items-center rounded-xl font-medium text-sm transition-colors ${
+                    sidebarCollapsed ? 'justify-center px-2 py-2.5' : 'space-x-3 px-3 py-2.5'
+                  } ${
+                    active ? 'text-white' : 'text-ink/80 hover:bg-paper hover:text-ink'
+                  }`}
+                >
+                  {active && (
+                    <motion.span
+                      layoutId="owner-active-nav"
+                      transition={{ type: 'spring', stiffness: 420, damping: 32 }}
+                      className="absolute inset-0 rounded-xl bg-accent shadow-sm"
+                      aria-hidden="true"
+                    />
+                  )}
+                  <Icon className={`w-4 h-4 shrink-0 relative z-10 ${active ? 'text-white' : 'text-muted'}`} />
+                  {!sidebarCollapsed && <span className="truncate relative z-10">{item.label}</span>}
+                </Link>
+              );
+            })}
+          </LayoutGroup>
         </nav>
 
         <div className="p-3 border-t border-border space-y-2.5">
@@ -289,14 +311,26 @@ export const OwnerLayout: React.FC = () => {
         </header>
 
         {/* Slide-Over Mobile Navigation Drawer */}
-        {mobileMenuOpen && (
-          <div className="fixed inset-0 z-50 md:hidden flex">
-            <div
-              className="fixed inset-0 bg-ink/50 backdrop-blur-xs"
-              onClick={() => setMobileMenuOpen(false)}
-              aria-hidden="true"
-            />
-            <aside className="relative w-72 max-w-[85vw] bg-surface border-r border-border h-full flex flex-col shadow-2xl animate-in slide-in-from-left duration-200">
+        <AnimatePresence>
+          {mobileMenuOpen && (
+            <div className="fixed inset-0 z-50 md:hidden flex">
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.2 }}
+                className="fixed inset-0 bg-ink/50 backdrop-blur-xs"
+                onClick={() => setMobileMenuOpen(false)}
+                aria-hidden="true"
+              />
+              <motion.aside
+                initial={{ x: '-100%' }}
+                animate={{ x: 0 }}
+                exit={{ x: '-100%' }}
+                transition={{ type: 'spring', stiffness: 360, damping: 34 }}
+                data-lenis-prevent
+                className="relative w-72 max-w-[85vw] bg-surface border-r border-border h-full flex flex-col shadow-2xl"
+              >
               <div className="h-16 px-4 border-b border-border flex items-center justify-between shrink-0">
                 <div className="flex items-center space-x-2.5 min-w-0">
                   <Logo variant="mark" size="sm" />
@@ -367,14 +401,19 @@ export const OwnerLayout: React.FC = () => {
                   <DevCenterPointBadge variant="sidebar" />
                 </div>
               </div>
-            </aside>
-          </div>
-        )}
+              </motion.aside>
+            </div>
+          )}
+        </AnimatePresence>
 
         {/* Page Content Outlet */}
         <main className="flex-1 p-4 sm:p-6 md:p-8 overflow-y-auto flex flex-col justify-between gap-8">
           <div className="min-w-0">
-            <Outlet />
+            <AnimatePresence mode="wait">
+              <MotionPage key={location.pathname}>
+                <Outlet />
+              </MotionPage>
+            </AnimatePresence>
           </div>
           <footer className="pt-4 border-t border-border/60 text-center">
             <DevCenterPointBadge variant="footer" />

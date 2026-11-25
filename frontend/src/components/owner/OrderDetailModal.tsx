@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
+import { AnimatePresence } from 'framer-motion';
+import { MotionModalBackdrop, MotionModalPanel } from '../common/MotionPrimitives';
 import {
   X,
   FileText,
@@ -52,8 +54,6 @@ export const OrderDetailModal: React.FC<OrderDetailModalProps> = ({
       });
   }, [isOpen, orderId]);
 
-  if (!isOpen || !orderId) return null;
-
   const handleHandover = async () => {
     if (!order) return;
     setActionLoading(true);
@@ -88,8 +88,10 @@ export const OrderDetailModal: React.FC<OrderDetailModalProps> = ({
   const canHandover = order && ['READY', 'PRINTED', 'printer_confirmed', 'ready', 'printed', 'completed', 'paid'].includes(order.status) && order.status !== 'COLLECTED';
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-ink/60 backdrop-blur-xs">
-      <div className="bg-surface border border-border rounded-2xl shadow-xl max-w-2xl w-full max-h-[90vh] flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-150">
+    <AnimatePresence>
+      {isOpen && orderId && (
+        <MotionModalBackdrop onClick={onClose}>
+          <MotionModalPanel className="bg-surface border border-border rounded-2xl shadow-xl max-w-2xl w-full max-h-[90dvh] flex flex-col overflow-hidden">
         <div className="p-5 border-b border-border flex items-center justify-between shrink-0">
           <div className="flex items-center space-x-3">
             <div className="w-10 h-10 rounded-xl bg-accent/10 text-accent flex items-center justify-center">
@@ -244,8 +246,10 @@ export const OrderDetailModal: React.FC<OrderDetailModalProps> = ({
             </button>
           </div>
         </div>
-      </div>
-    </div>
+      </MotionModalPanel>
+    </MotionModalBackdrop>
+      )}
+    </AnimatePresence>
   );
 };
 

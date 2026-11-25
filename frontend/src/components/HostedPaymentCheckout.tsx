@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import confetti from 'canvas-confetti';
 import { CreditCard, ShieldCheck, Smartphone, Terminal, Loader2, AlertCircle } from 'lucide-react';
 import { formatMoney } from '../lib/money';
 import { apiRequest } from '../lib/api';
@@ -67,6 +68,20 @@ export const HostedPaymentCheckout: React.FC<HostedPaymentCheckoutProps> = ({
         });
 
         if (response.data?.status === 'PAID') {
+          const reduced =
+            typeof window !== 'undefined' &&
+            typeof window.matchMedia === 'function' &&
+            window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+          const isJsdom =
+            typeof navigator !== 'undefined' && navigator.userAgent.toLowerCase().includes('jsdom');
+          if (!reduced && !isJsdom) {
+            confetti({
+              particleCount: 55,
+              spread: 65,
+              origin: { y: 0.7 },
+              colors: ['#245BDB', '#059669', '#00D2FF', '#F59E0B'],
+            });
+          }
           onPaymentSuccess?.(response.data);
         } else {
           throw new Error(response.data?.error || `Sandbox returned status: ${response.data?.status}`);

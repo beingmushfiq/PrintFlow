@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { AnimatePresence } from 'framer-motion';
+import { MotionModalBackdrop, MotionModalPanel } from '../common/MotionPrimitives';
 import { X, AlertTriangle, Printer, RotateCcw } from 'lucide-react';
 import { apiRequest } from '../../lib/api';
 
@@ -23,8 +25,6 @@ export const ControlledReprintModal: React.FC<ControlledReprintModalProps> = ({
   const [confirmed, setConfirmed] = useState<boolean>(false);
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
-
-  if (!isOpen) return null;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -55,8 +55,10 @@ export const ControlledReprintModal: React.FC<ControlledReprintModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-ink/60 backdrop-blur-xs">
-      <div className="bg-surface border border-border rounded-2xl shadow-xl max-w-md w-full overflow-hidden flex flex-col animate-in fade-in zoom-in-95 duration-150">
+    <AnimatePresence>
+      {isOpen && (
+        <MotionModalBackdrop onClick={onClose}>
+          <MotionModalPanel className="bg-surface border border-border rounded-2xl shadow-xl max-w-md w-full overflow-hidden flex flex-col max-h-[90dvh]">
         <div className="p-5 border-b border-border flex items-center justify-between">
           <div className="flex items-center space-x-2.5">
             <div className="w-9 h-9 rounded-lg bg-status-warning/15 text-status-warning flex items-center justify-center">
@@ -139,8 +141,10 @@ export const ControlledReprintModal: React.FC<ControlledReprintModalProps> = ({
             </button>
           </div>
         </form>
-      </div>
-    </div>
+      </MotionModalPanel>
+    </MotionModalBackdrop>
+      )}
+    </AnimatePresence>
   );
 };
 

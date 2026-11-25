@@ -1,6 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
+import gsap from 'gsap';
+import { useGSAP } from '@gsap/react';
 import {
   TrendingUp,
   ShoppingBag,
@@ -13,14 +15,42 @@ import {
   RefreshCw,
 } from 'lucide-react';
 import { apiRequest } from '../../lib/api';
+import { formatMoney } from '../../lib/money';
 import { AgentPairingModal } from '../../components/owner/AgentPairingModal';
+import { AnimatedCounter } from '../../components/common/MotionPrimitives';
+
+gsap.registerPlugin(useGSAP);
 
 export const DashboardPage: React.FC = () => {
-  const { t } = useTranslation(['common', 'owner']);
+  const { t, i18n } = useTranslation(['common', 'owner']);
   const [metrics, setMetrics] = useState<any>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [pairingModalOpen, setPairingModalOpen] = useState<boolean>(false);
+  const gridRef = useRef<HTMLDivElement>(null);
+
+  useGSAP(
+    () => {
+      const isJsdom =
+        typeof navigator !== 'undefined' && navigator.userAgent.toLowerCase().includes('jsdom');
+      if (isJsdom) return;
+
+      const mm = gsap.matchMedia();
+      mm.add('(prefers-reduced-motion: no-preference)', () => {
+        gsap.from('.kpi-card', {
+          y: 14,
+          opacity: 0,
+          duration: 0.4,
+          stagger: 0.05,
+          ease: 'power2.out',
+          clearProps: 'transform,opacity',
+        });
+      });
+
+      return () => mm.revert();
+    },
+    { scope: gridRef }
+  );
 
   const fetchMetrics = async () => {
     setLoading(true);
@@ -90,9 +120,9 @@ export const DashboardPage: React.FC = () => {
       )}
 
       {/* 5 Operational Metric Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+      <div ref={gridRef} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
         {/* Today's Revenue */}
-        <div className="p-5 rounded-2xl bg-surface border border-border shadow-xs space-y-3">
+        <div className="kpi-card p-5 rounded-2xl bg-surface border border-border shadow-xs space-y-3 hover:border-accent/40 transition-colors">
           <div className="flex items-center justify-between">
             <span className="text-xs font-semibold text-muted">{t('owner:revenue_today')}</span>
             <div className="w-8 h-8 rounded-lg bg-status-success/15 text-status-success flex items-center justify-center">
@@ -100,13 +130,22 @@ export const DashboardPage: React.FC = () => {
             </div>
           </div>
           <div className="text-2xl font-extrabold text-ink tracking-tight">
-            {metrics?.today_revenue_formatted ?? '৳ 0.00'}
+            {loading && !metrics ? (
+              <div className="h-8 w-28 rounded-lg skeleton-shimmer" />
+            ) : metrics?.today_revenue_poisha != null ? (
+              <AnimatedCounter
+                value={Number(metrics.today_revenue_poisha) || 0}
+                formatter={(v) => formatMoney(Math.round(v), i18n.language.startsWith('bn') ? 'bn' : 'en')}
+              />
+            ) : (
+              metrics?.today_revenue_formatted ?? '৳ 0.00'
+            )}
           </div>
           <p className="text-[11px] text-muted">Integer Poisha minor units</p>
         </div>
 
         {/* Today's Orders */}
-        <div className="p-5 rounded-2xl bg-surface border border-border shadow-xs space-y-3">
+        <div className="kpi-card p-5 rounded-2xl bg-surface border border-border shadow-xs space-y-3 hover:border-accent/40 transition-colors">
           <div className="flex items-center justify-between">
             <span className="text-xs font-semibold text-muted">{t('owner:orders_today')}</span>
             <div className="w-8 h-8 rounded-lg bg-accent-soft text-accent flex items-center justify-center">
@@ -114,13 +153,17 @@ export const DashboardPage: React.FC = () => {
             </div>
           </div>
           <div className="text-2xl font-extrabold text-ink tracking-tight">
-            {metrics?.today_orders_count ?? 0}
+            {loading && !metrics ? (
+              <div className="h-8 w-16 rounded-lg skeleton-shimmer" />
+            ) : (
+              <AnimatedCounter value={Number(metrics?.today_orders_count ?? 0)} />
+            )}
           </div>
           <p className="text-[11px] text-muted">Total counter uploads</p>
         </div>
 
         {/* Active Queue Depth */}
-        <div className="p-5 rounded-2xl bg-surface border border-border shadow-xs space-y-3">
+        <div className="kpi-card p-5 rounded-2xl bg-surface border border-border shadow-xs space-y-3 hover:border-accent/40 transition-colors">
           <div className="flex items-center justify-between">
             <span className="text-xs font-semibold text-muted">{t('owner:queue_depth')}</span>
             <div className="w-8 h-8 rounded-lg bg-accent/10 text-accent flex items-center justify-center">
@@ -128,7 +171,11 @@ export const DashboardPage: React.FC = () => {
             </div>
           </div>
           <div className="text-2xl font-extrabold text-ink tracking-tight">
-            {metrics?.queue_depth ?? 0}
+            {loading && !metrics ? (
+              <div className="h-8 w-16 rounded-lg skeleton-shimmer" />
+            ) : (
+              <AnimatedCounter value={Number(metrics?.queue_depth ?? 0)} />
+            )}
           </div>
           <div className="flex items-center">
             <span className={`px-2 py-0.5 rounded text-[10px] font-semibold border ${badge.color}`}>
@@ -138,7 +185,7 @@ export const DashboardPage: React.FC = () => {
         </div>
 
         {/* Active Print Errors */}
-        <div className="p-5 rounded-2xl bg-surface border border-border shadow-xs space-y-3">
+        <div className="kpi-card p-5 rounded-2xl bg-surface border border-border shadow-xs space-y-3 hover:border-accent/40 transition-colors">
           <div className="flex items-center justify-between">
             <span className="text-xs font-semibold text-muted">{t('owner:print_errors')}</span>
             <div className="w-8 h-8 rounded-lg bg-status-error/15 text-status-error flex items-center justify-center">
@@ -146,13 +193,17 @@ export const DashboardPage: React.FC = () => {
             </div>
           </div>
           <div className="text-2xl font-extrabold text-ink tracking-tight">
-            {metrics?.active_errors_count ?? 0}
+            {loading && !metrics ? (
+              <div className="h-8 w-16 rounded-lg skeleton-shimmer" />
+            ) : (
+              <AnimatedCounter value={Number(metrics?.active_errors_count ?? 0)} />
+            )}
           </div>
           <p className="text-[11px] text-muted">Failed or jammed jobs</p>
         </div>
 
         {/* Connected Print Agents */}
-        <div className="p-5 rounded-2xl bg-surface border border-border shadow-xs space-y-3">
+        <div className="kpi-card p-5 rounded-2xl bg-surface border border-border shadow-xs space-y-3 hover:border-accent/40 transition-colors">
           <div className="flex items-center justify-between">
             <span className="text-xs font-semibold text-muted">{t('owner:connected_agents')}</span>
             <div className="w-8 h-8 rounded-lg bg-accent/10 text-accent flex items-center justify-center">
@@ -160,7 +211,11 @@ export const DashboardPage: React.FC = () => {
             </div>
           </div>
           <div className="text-2xl font-extrabold text-ink tracking-tight">
-            {metrics?.connected_agents_count ?? 0}
+            {loading && !metrics ? (
+              <div className="h-8 w-16 rounded-lg skeleton-shimmer" />
+            ) : (
+              <AnimatedCounter value={Number(metrics?.connected_agents_count ?? 0)} />
+            )}
           </div>
           <p className="text-[11px] text-status-success font-semibold flex items-center space-x-1">
             <CheckCircle2 className="w-3.5 h-3.5" />

@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
+import { AnimatePresence } from 'framer-motion';
+import { MotionModalBackdrop, MotionModalPanel } from '../common/MotionPrimitives';
 import {
   X,
   RefreshCw,
@@ -108,16 +110,16 @@ export const AgentPairingModal: React.FC<AgentPairingModalProps> = ({ isOpen, on
     }
   };
 
-  if (!isOpen) return null;
-
   const minutes = Math.floor(secondsRemaining / 60);
   const seconds = secondsRemaining % 60;
   const timeFormatted = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
   const isExpired = secondsRemaining <= 0;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-ink/60 backdrop-blur-xs">
-      <div className="bg-surface border border-border rounded-2xl shadow-2xl max-w-lg w-full overflow-hidden flex flex-col animate-in fade-in zoom-in-95 duration-150 max-h-[90vh]">
+    <AnimatePresence>
+      {isOpen && (
+        <MotionModalBackdrop onClick={handleRevoke}>
+          <MotionModalPanel className="bg-surface border border-border rounded-2xl shadow-2xl max-w-lg w-full overflow-hidden flex flex-col max-h-[90dvh]">
         {/* Header */}
         <div className="p-5 border-b border-border flex items-center justify-between shrink-0 bg-surface">
           <div className="flex items-center space-x-2.5">
@@ -324,8 +326,10 @@ export const AgentPairingModal: React.FC<AgentPairingModalProps> = ({ isOpen, on
             {t('common:close')}
           </button>
         </div>
-      </div>
-    </div>
+      </MotionModalPanel>
+    </MotionModalBackdrop>
+      )}
+    </AnimatePresence>
   );
 };
 

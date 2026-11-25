@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import { motion } from 'framer-motion';
+import { SNAPPY_EASE } from '../../components/common/MotionPrimitives';
 import {
   CheckCircle2,
   Clock,
@@ -156,7 +158,13 @@ export const OrderStatusPage: React.FC = () => {
               const isCurrent = idx === order.current_stage;
 
               return (
-                <div key={stageName} className="relative flex items-start gap-4">
+                <motion.div
+                  key={stageName}
+                  initial={{ opacity: 0, x: -8 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ duration: 0.25, delay: idx * 0.04, ease: SNAPPY_EASE }}
+                  className="relative flex items-start gap-4"
+                >
                   {/* Circle Marker */}
                   <div
                     className={`absolute -left-6 w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ring-4 ring-white ${
@@ -201,7 +209,7 @@ export const OrderStatusPage: React.FC = () => {
                       {stageDescriptions[idx] || stageName}
                     </p>
                   </div>
-                </div>
+                </motion.div>
               );
             })}
           </div>

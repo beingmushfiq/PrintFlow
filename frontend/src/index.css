@@ -44,3 +44,62 @@
     letter-spacing: 0.01em;
   }
 }
+
+/* Lenis smooth scroll recommendations */
+html.lenis,
+html.lenis body {
+  height: auto;
+}
+
+.lenis.lenis-smooth {
+  scroll-behavior: auto !important;
+}
+
+.lenis.lenis-smooth [data-lenis-prevent] {
+  overscroll-behavior: contain;
+}
+
+.lenis.lenis-stopped {
+  overflow: hidden;
+}
+
+/* GPU-composited Skeleton Shimmer */
+@keyframes pf-shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.skeleton-shimmer {
+  background: linear-gradient(
+    90deg,
+    rgba(226, 230, 236, 0.45) 25%,
+    rgba(255, 255, 255, 0.85) 50%,
+    rgba(226, 230, 236, 0.45) 75%
+  );
+  background-size: 200% 100%;
+  animation: pf-shimmer 1.5s infinite linear;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .skeleton-shimmer {
+    animation: none;
+  }
+}
+
+/* Print safety: ensure crisp physical receipts with zero motion offsets */
+@media print {
+  html.lenis,
+  html.lenis body {
+    height: auto !important;
+    overflow: visible !important;
+  }
+  * {
+    animation: none !important;
+    transition: none !important;
+    transform: none !important;
+  }
+}

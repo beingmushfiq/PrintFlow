@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import { motion, AnimatePresence } from 'framer-motion';
+import { SNAPPY_EASE } from '../../components/common/MotionPrimitives';
 import {
   ShieldCheck,
   MapPin,
@@ -282,9 +284,17 @@ export const StorefrontPage: React.FC = () => {
           </div>
         )}
 
-        {/* Step 1: Customer Phone Intake */}
-        {!order && !isPaused && (
-          <section className="bg-surface border border-border rounded-2xl p-6 shadow-sm space-y-5">
+        <AnimatePresence mode="wait">
+          {/* Step 1: Customer Phone Intake */}
+          {!order && !isPaused && (
+            <motion.section
+              key="step-phone"
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -8 }}
+              transition={{ duration: 0.25, ease: SNAPPY_EASE }}
+              className="bg-surface border border-border rounded-2xl p-5 sm:p-6 shadow-sm space-y-5"
+            >
             <div className="space-y-1">
               <span className="inline-flex items-center space-x-1 px-2 py-0.5 rounded text-[11px] font-bold bg-accent-soft text-accent">
                 <Sparkles className="w-3 h-3" />
@@ -343,12 +353,19 @@ export const StorefrontPage: React.FC = () => {
                 )}
               </button>
             </div>
-          </section>
-        )}
+            </motion.section>
+          )}
 
-        {/* Step 2: Upload Documents */}
-        {order && (
-          <section className="bg-surface border border-border rounded-2xl p-6 shadow-sm space-y-5">
+          {/* Step 2: Upload Documents */}
+          {order && (
+            <motion.section
+              key="step-upload"
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -8 }}
+              transition={{ duration: 0.25, ease: SNAPPY_EASE }}
+              className="bg-surface border border-border rounded-2xl p-5 sm:p-6 shadow-sm space-y-5"
+            >
             <div className="flex items-center justify-between pb-3 border-b border-border">
               <div className="space-y-0.5">
                 <span className="text-[11px] font-bold text-accent uppercase tracking-wider block">
@@ -385,12 +402,21 @@ export const StorefrontPage: React.FC = () => {
                 </button>
               </div>
             )}
-          </section>
-        )}
+            </motion.section>
+          )}
+        </AnimatePresence>
 
         {/* Step 3: Print Options, Live Quote & Checkout */}
-        {order && step === 'options_and_checkout' && (
-          <section className="space-y-6">
+        <AnimatePresence>
+          {order && step === 'options_and_checkout' && (
+            <motion.section
+              key="step-options"
+              initial={{ opacity: 0, y: 14 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -8 }}
+              transition={{ duration: 0.28, ease: SNAPPY_EASE }}
+              className="space-y-6"
+            >
             <div className="flex items-center justify-between">
               <button
                 type="button"
@@ -434,8 +460,9 @@ export const StorefrontPage: React.FC = () => {
                 }}
               />
             )}
-          </section>
-        )}
+            </motion.section>
+          )}
+        </AnimatePresence>
 
         {/* Trust & Privacy Card */}
         <section className="bg-surface/60 border border-border rounded-xl p-4 flex items-start space-x-3 text-xs text-muted shadow-xs">
