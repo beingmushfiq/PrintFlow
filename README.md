@@ -1,6 +1,6 @@
 <p align="center">
   <a href="https://devcenterpoint.com">
-    <img src="docs/assets/devcenterpoint-logo.png" alt="DevCenterPoint — Code. Build. Deploy. Scale." width="200" />
+    <img src="docs/assets/printflow-banner.png" alt="PrintFlow by DevCenterPoint — Smart Printing. Simplified." width="100%" />
   </a>
 </p>
 

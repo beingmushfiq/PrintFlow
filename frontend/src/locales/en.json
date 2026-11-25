@@ -185,7 +185,13 @@
     "printer_status": "Status",
     "enable_printer": "Enabled",
     "disable_printer": "Disabled",
-    "cannot_disable_default": "Cannot disable the default printer without selecting a replacement"
+    "cannot_disable_default": "Cannot disable the default printer without selecting a replacement",
+    "collapse_sidebar": "Collapse sidebar",
+    "expand_sidebar": "Expand sidebar",
+    "owner_operations": "Owner Operations",
+    "agent_label": "Agent",
+    "online": "Online",
+    "offline": "Offline"
   },
   "status": {
     "tracking_title": "Live Order Progress",

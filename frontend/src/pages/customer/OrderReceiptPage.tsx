@@ -254,7 +254,7 @@ export const OrderReceiptPage: React.FC = () => {
 
         {/* Footer */}
         <div className="text-center text-[10px] text-slate-400 border-t border-slate-100 pt-3">
-          Powered by PrintFlow · Autonomous Walk-in Print Shop Automation
+          PrintFlow by DevCenterPoint · Autonomous Walk-in Print Shop Automation
         </div>
       </div>
     </div>

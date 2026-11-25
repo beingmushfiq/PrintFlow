@@ -1,14 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useTranslation } from 'react-i18next';
 import {
-  Printer,
   Store,
   QrCode,
   Download,
   ExternalLink,
   Save,
-  LogOut,
   Loader2,
   CheckCircle,
   AlertCircle,
@@ -29,7 +26,6 @@ interface ShopDetails {
 }
 
 export const ShopProfilePage: React.FC = () => {
-  const { t } = useTranslation(['common', 'auth']);
   const navigate = useNavigate();
 
   const [shop, setShop] = useState<ShopDetails | null>(null);
@@ -97,17 +93,6 @@ export const ShopProfilePage: React.FC = () => {
     }
   };
 
-  const handleLogout = async () => {
-    try {
-      await apiRequest('/auth/logout', { method: 'POST' });
-    } catch {
-      // Ignore
-    } finally {
-      removeAuthToken();
-      navigate('/login');
-    }
-  };
-
   const storefrontUrl = shop
     ? `${window.location.origin}/s/${shop.slug}`
     : (shop?.storefront_url || '');
@@ -132,45 +117,34 @@ export const ShopProfilePage: React.FC = () => {
     : `/api/v1/owner/shop/qr`;
 
   return (
-    <div className="min-h-screen bg-paper text-ink flex flex-col justify-between">
-      {/* Header */}
-      <header className="bg-surface border-b border-border px-6 py-4 shadow-sm">
-        <div className="max-w-5xl mx-auto flex items-center justify-between">
-          <div className="flex items-center space-x-3">
-            <div className="w-10 h-10 rounded-lg bg-accent flex items-center justify-center text-white shadow-sm">
-              <Printer className="w-6 h-6" />
-            </div>
-            <div>
-              <h1 className="text-lg font-bold text-ink">PrintFlow Console</h1>
-              <p className="text-xs text-muted">Shop Profile &amp; Counter QR Setup</p>
-            </div>
-          </div>
-
-          <div className="flex items-center space-x-3">
-            {shop && (
-              <a
-                href={storefrontUrl}
-                target="_blank"
-                rel="noreferrer"
-                className="hidden sm:inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-lg border border-border text-xs font-semibold hover:bg-paper transition-colors"
-              >
-                <span>View Storefront</span>
-                <ExternalLink className="w-3.5 h-3.5 text-accent" />
-              </a>
-            )}
-            <button
-              onClick={handleLogout}
-              className="inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-lg border border-border text-xs font-semibold text-muted hover:text-status-danger hover:bg-red-50 transition-colors"
-            >
-              <LogOut className="w-3.5 h-3.5" />
-              <span>{t('auth:logout', { defaultValue: 'Log Out' })}</span>
-            </button>
-          </div>
+    <div className="max-w-5xl mx-auto space-y-6 animate-in fade-in duration-150">
+      {/* Page Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+        <div>
+          <h1 className="text-2xl font-extrabold tracking-tight text-ink flex items-center space-x-2.5">
+            <QrCode className="w-6 h-6 text-accent shrink-0" />
+            <span>Shop Profile &amp; Counter QR Studio</span>
+          </h1>
+          <p className="text-sm text-muted">
+            Manage storefront identity, counter location, and printable QR placards
+          </p>
         </div>
-      </header>
+
+        {shop && (
+          <a
+            href={storefrontUrl}
+            target="_blank"
+            rel="noreferrer"
+            className="inline-flex items-center justify-center space-x-1.5 px-3.5 py-2 rounded-xl border border-border bg-surface text-xs font-semibold hover:border-accent transition-colors shrink-0 self-start sm:self-auto"
+          >
+            <span>View Storefront</span>
+            <ExternalLink className="w-3.5 h-3.5 text-accent" />
+          </a>
+        )}
+      </div>
 
       {/* Main Content */}
-      <main className="flex-1 max-w-5xl w-full mx-auto p-4 sm:p-6 space-y-6">
+      <div className="space-y-6">
         {error && (
           <div className="bg-red-50 border border-status-danger/20 rounded-xl p-4 flex items-center space-x-2 text-sm text-status-danger">
             <AlertCircle className="w-5 h-5 shrink-0" />
@@ -347,7 +321,7 @@ export const ShopProfilePage: React.FC = () => {
                 <span className="text-[10px] bg-accent-soft text-accent px-1.5 py-0.5 rounded font-bold">PDF</span>
               </a>
 
-              <div className="grid grid-cols-2 gap-2 pt-1">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1">
                 <a
                   href={`${qrBaseUrl}?format=png`}
                   download={`${shop?.slug}-qr.png`}
@@ -369,11 +343,7 @@ export const ShopProfilePage: React.FC = () => {
             </div>
           </div>
         </div>
-      </main>
-
-      <footer className="py-4 text-center text-xs text-muted border-t border-border bg-surface">
-        <p>PrintFlow • Autonomous Walk-in Print Shop Automation</p>
-      </footer>
+      </div>
     </div>
   );
 };

@@ -185,7 +185,13 @@
     "printer_status": "স্ট্যাটাস",
     "enable_printer": "সক্রিয়",
     "disable_printer": "নিষ্ক্রিয়",
-    "cannot_disable_default": "বিকল্প নির্বাচন না করে ডিফল্ট প্রিন্টার নিষ্ক্রিয় করা যাবে না"
+    "cannot_disable_default": "বিকল্প নির্বাচন না করে ডিফল্ট প্রিন্টার নিষ্ক্রিয় করা যাবে না",
+    "collapse_sidebar": "সাইডবার ছোট করুন",
+    "expand_sidebar": "সাইডবার বড় করুন",
+    "owner_operations": "মালিক পরিচালনা",
+    "agent_label": "এজেন্ট",
+    "online": "অনলাইন",
+    "offline": "অফলাইন"
   },
   "status": {
     "tracking_title": "অর্ডার ট্র্যাকিং ও অগ্রগতি",

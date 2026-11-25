@@ -118,6 +118,10 @@ export const LoginPage: React.FC = () => {
             </Link>
           </div>
         </div>
+
+        <p className="mt-6 text-center text-xs text-muted">
+          &copy; 2026 PrintFlow by DevCenterPoint
+        </p>
       </div>
     </div>
   );

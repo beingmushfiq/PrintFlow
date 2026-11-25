@@ -185,7 +185,7 @@ export const PricingPage: React.FC = () => {
             {/* Duplex Model Selector */}
             <div className="space-y-2 pt-2 border-t border-border">
               <label className="block text-xs font-semibold text-ink">Duplex Calculation Engine</label>
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <button
                   type="button"
                   onClick={() => setDuplexModel('model_b')}
@@ -320,7 +320,7 @@ export const PricingPage: React.FC = () => {
             </div>
 
             {/* Minimum floor and VAT */}
-            <div className="grid grid-cols-2 gap-4 pt-2 border-t border-border">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2 border-t border-border">
               <div className="space-y-1.5">
                 <label className="block text-xs font-semibold text-ink">{t('owner:minimum_order')}</label>
                 <input
