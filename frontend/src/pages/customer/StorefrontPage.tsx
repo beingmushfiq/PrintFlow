@@ -188,7 +188,7 @@ export const StorefrontPage: React.FC = () => {
             <Logo variant="mark" size="sm" />
             <div>
               <span className="text-xs font-semibold uppercase tracking-wider text-accent block leading-none">
-                PrintFlow Counter
+                {t('storefront:counter_label')}
               </span>
               <h1 className="text-base font-bold text-ink leading-tight truncate max-w-[180px] sm:max-w-xs">
                 {shop.name}
@@ -235,32 +235,32 @@ export const StorefrontPage: React.FC = () => {
                 ? 'bg-emerald-50 text-status-success border border-status-success/20'
                 : 'bg-amber-50 text-status-warning border border-status-warning/20'
             }`}>
-              {shop.public_status === 'active' ? '● Open' : '● Paused'}
+              ● {shop.public_status === 'active' ? t('storefront:status_open') : t('storefront:status_paused')}
             </span>
           </div>
 
           {/* Pricing Guide Bar */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-2 border-t border-border/60">
             <div className="bg-paper p-2 rounded-lg text-center">
-              <span className="text-[10px] text-muted block uppercase font-bold">Mono Single</span>
+              <span className="text-[10px] text-muted block uppercase font-bold">{t('storefront:rate_mono_single')}</span>
               <span className="text-xs font-bold text-ink">
                 {formatMoney(priceGuide.simplex_mono || 300, isBengali ? 'bn' : 'en')}
               </span>
             </div>
             <div className="bg-paper p-2 rounded-lg text-center">
-              <span className="text-[10px] text-muted block uppercase font-bold">Mono Both-Side</span>
+              <span className="text-[10px] text-muted block uppercase font-bold">{t('storefront:rate_mono_duplex')}</span>
               <span className="text-xs font-bold text-ink">
                 {formatMoney(priceGuide.duplex_mono || 500, isBengali ? 'bn' : 'en')}
               </span>
             </div>
             <div className="bg-paper p-2 rounded-lg text-center">
-              <span className="text-[10px] text-muted block uppercase font-bold">Color Single</span>
+              <span className="text-[10px] text-muted block uppercase font-bold">{t('storefront:rate_color_single')}</span>
               <span className="text-xs font-bold text-ink">
                 {formatMoney(priceGuide.simplex_color || 1000, isBengali ? 'bn' : 'en')}
               </span>
             </div>
             <div className="bg-paper p-2 rounded-lg text-center">
-              <span className="text-[10px] text-muted block uppercase font-bold">Color Both-Side</span>
+              <span className="text-[10px] text-muted block uppercase font-bold">{t('storefront:rate_color_duplex')}</span>
               <span className="text-xs font-bold text-ink">
                 {formatMoney(priceGuide.duplex_color || 1800, isBengali ? 'bn' : 'en')}
               </span>
@@ -273,9 +273,9 @@ export const StorefrontPage: React.FC = () => {
           <div className="bg-amber-50 border border-status-warning/30 rounded-2xl p-4 flex items-start space-x-3 text-status-warning">
             <AlertTriangle className="w-5 h-5 shrink-0 mt-0.5" />
             <div>
-              <h3 className="text-sm font-bold">Shop Currently Not Accepting Orders</h3>
+              <h3 className="text-sm font-bold">{t('storefront:shop_paused_title')}</h3>
               <p className="text-xs mt-0.5 text-amber-800">
-                The counter printer is currently paused. Please check with the counter operator.
+                {t('storefront:shop_paused_desc')}
               </p>
             </div>
           </div>
@@ -287,7 +287,7 @@ export const StorefrontPage: React.FC = () => {
             <div className="space-y-1">
               <span className="inline-flex items-center space-x-1 px-2 py-0.5 rounded text-[11px] font-bold bg-accent-soft text-accent">
                 <Sparkles className="w-3 h-3" />
-                <span>Step 1 of 2</span>
+                <span>{t('storefront:step_1_of_2')}</span>
               </span>
               <h3 className="text-lg font-bold text-ink">
                 {t('storefront:scan_prompt')}
@@ -310,14 +310,14 @@ export const StorefrontPage: React.FC = () => {
 
               <div className="space-y-1.5">
                 <label htmlFor="customer-name" className="block text-xs font-semibold text-ink">
-                  Customer Name (Optional)
+                  {t('storefront:customer_name_label')}
                 </label>
                 <input
                   id="customer-name"
                   type="text"
                   value={customerName}
                   onChange={e => setCustomerName(e.target.value)}
-                  placeholder="e.g. Tanvir Ahmed"
+                  placeholder={t('storefront:customer_name_placeholder')}
                   className="block w-full h-11 px-3 text-sm rounded-lg border border-border bg-surface text-ink focus:outline-none focus:ring-2 focus:ring-accent/30 focus:border-accent"
                 />
               </div>
@@ -326,17 +326,17 @@ export const StorefrontPage: React.FC = () => {
                 type="button"
                 onClick={handleStartOrder}
                 disabled={!isPhoneValid || creatingOrder}
-                className={`w-full h-12 flex items-center justify-center space-x-2 rounded-xl font-bold text-sm text-white shadow-md transition-all ${
+                className={`w-full h-12 flex items-center justify-center space-x-2 rounded-xl font-bold text-sm transition-all ${
                   isPhoneValid && !creatingOrder
-                    ? 'bg-accent hover:bg-accent/90 cursor-pointer'
-                    : 'bg-muted/40 cursor-not-allowed opacity-60'
+                    ? 'bg-accent hover:bg-accent/90 text-white shadow-md cursor-pointer'
+                    : 'bg-paper-dark text-muted border border-border cursor-not-allowed'
                 }`}
               >
                 {creatingOrder ? (
                   <Loader2 className="w-5 h-5 animate-spin" />
                 ) : (
                   <>
-                    <span>{t('storefront:upload_title')}</span>
+                    <span>{t('storefront:continue_to_upload')}</span>
                     <span>→</span>
                   </>
                 )}
@@ -452,7 +452,7 @@ export const StorefrontPage: React.FC = () => {
 
       {/* Footer */}
       <footer className="py-4 text-center text-xs text-muted border-t border-border bg-surface">
-        <p>{t('common:powered_by')} • PrintFlow Autonomous System</p>
+        <p>{t('common:footer_copyright')}</p>
       </footer>
     </div>
   );

@@ -28,6 +28,7 @@
     "owner_console_qr": "Owner Console & QR Studio",
     "owner_login": "Owner Login",
     "register_new_shop": "Register New Shop",
+    "select_shop": "Select Print Shop",
     "footer_copyright": "© 2026 PrintFlow by DevCenterPoint"
   },
   "auth": {
@@ -58,7 +59,20 @@
     "pages_detected": "{{count}} page",
     "pages_detected_plural": "{{count}} pages",
     "privacy_notice": "Your documents are securely encrypted, processed only for printing, and purged immediately after output.",
-    "file_retention_policy": "Automated document purge occurs within 30 minutes of successful printing."
+    "file_retention_policy": "Automated document purge occurs within 30 minutes of successful printing.",
+    "counter_label": "PrintFlow Counter",
+    "status_open": "Open",
+    "status_paused": "Paused",
+    "rate_mono_single": "B&W Single",
+    "rate_mono_duplex": "B&W Duplex",
+    "rate_color_single": "Color Single",
+    "rate_color_duplex": "Color Duplex",
+    "step_1_of_2": "Step 1 of 2",
+    "customer_name_label": "Customer Name (Optional)",
+    "customer_name_placeholder": "e.g. Tanvir Ahmed",
+    "continue_to_upload": "Continue to Document Upload",
+    "shop_paused_title": "Shop Currently Not Accepting Orders",
+    "shop_paused_desc": "The counter printer is currently paused. Please check with the counter operator."
   },
   "quote": {
     "title": "Print Configuration & Quote",

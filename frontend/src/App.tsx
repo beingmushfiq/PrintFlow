@@ -1,9 +1,10 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Link, Navigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Globe, ArrowRight, Store, LogIn, UserPlus } from 'lucide-react';
+import { Globe, ArrowRight, Store, LogIn, UserPlus, ChevronDown } from 'lucide-react';
 import { Logo } from './components/common/Logo';
 import { usePageTitle } from './hooks/usePageTitle';
+import { apiRequest } from './lib/api';
 import { StorefrontPage } from './pages/customer/StorefrontPage';
 import { OrderStatusPage } from './pages/customer/OrderStatusPage';
 import { OrderReceiptPage } from './pages/customer/OrderReceiptPage';
@@ -18,9 +19,36 @@ import { PricingPage } from './pages/owner/PricingPage';
 import { GatewaysPage } from './pages/owner/GatewaysPage';
 import { ShopProfilePage } from './pages/owner/ShopProfilePage';
 
+interface PublicShopSummary {
+  id: string;
+  name: string;
+  slug: string;
+  address?: string | null;
+}
+
 export const LandingHome: React.FC = () => {
   const { t, i18n } = useTranslation(['common', 'storefront']);
   usePageTitle();
+  const [shops, setShops] = useState<PublicShopSummary[]>([]);
+  const [selectedSlug, setSelectedSlug] = useState<string>('printflow-main');
+
+  useEffect(() => {
+    let active = true;
+    apiRequest<{ shops: PublicShopSummary[] }>('/public/shops')
+      .then((res) => {
+        if (!active || !res.data?.shops?.length) return;
+        const list = res.data.shops;
+        setShops(list);
+        const hasDefault = list.some((s) => s.slug === 'printflow-main');
+        setSelectedSlug(hasDefault ? 'printflow-main' : list[0].slug);
+      })
+      .catch(() => {
+        // Fallback silently to default printflow-main
+      });
+    return () => {
+      active = false;
+    };
+  }, []);
 
   const toggleLanguage = () => {
     const nextLang = i18n.language.startsWith('bn') ? 'en' : 'bn';
@@ -71,9 +99,32 @@ export const LandingHome: React.FC = () => {
             {t('common:hero_subtitle')}
           </p>
 
+          {shops.length > 1 && (
+            <div className="max-w-sm mx-auto text-left space-y-1.5">
+              <label htmlFor="landing-shop-select" className="block text-xs font-semibold text-muted">
+                {t('common:select_shop')}
+              </label>
+              <div className="relative">
+                <select
+                  id="landing-shop-select"
+                  value={selectedSlug}
+                  onChange={(e) => setSelectedSlug(e.target.value)}
+                  className="w-full h-10 pl-3 pr-9 text-xs font-semibold rounded-lg border border-border bg-paper text-ink appearance-none focus:outline-none focus:ring-2 focus:ring-accent/30 focus:border-accent cursor-pointer"
+                >
+                  {shops.map((s) => (
+                    <option key={s.id} value={s.slug}>
+                      {s.name}{s.address ? ` — ${s.address}` : ''}
+                    </option>
+                  ))}
+                </select>
+                <ChevronDown className="w-4 h-4 text-muted absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+              </div>
+            </div>
+          )}
+
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
             <Link
-              to="/s/printflow-main"
+              to={`/s/${selectedSlug}`}
               className="flex items-center justify-between p-4 rounded-xl border border-accent bg-accent text-white font-bold text-sm shadow hover:bg-accent/90 transition-all"
             >
               <div className="flex items-center space-x-3">

@@ -10,6 +10,8 @@ use App\Http\Controllers\Controller;
 use App\Http\Responses\ApiResponse;
 use App\Models\Order;
 use App\Models\OrderEvent;
+use App\Models\PriceProfile;
+use App\Models\PriceRule;
 use App\Models\Shop;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -18,6 +20,21 @@ use Illuminate\Support\Str;
 
 class StorefrontController extends Controller
 {
+    /**
+     * List active public shops for storefront selection.
+     */
+    public function index(): JsonResponse
+    {
+        $shops = Shop::withoutTenant()
+            ->where('public_status', 'active')
+            ->orderBy('created_at')
+            ->get(['id', 'name', 'slug', 'address', 'public_status']);
+
+        return ApiResponse::success([
+            'shops' => $shops,
+        ]);
+    }
+
     /**
      * Get public shop information by slug.
      */
@@ -34,6 +51,69 @@ class StorefrontController extends Controller
             ], 404);
         }
 
+        $publicSettings = $shop->public_settings_json ?? [
+            'accepted_formats' => ['pdf', 'png', 'jpg', 'jpeg'],
+            'max_file_size_mb' => 100,
+        ];
+
+        $priceGuide = $publicSettings['price_guide'] ?? [
+            'simplex_mono' => 300,
+            'duplex_mono' => 500,
+            'simplex_color' => 1000,
+            'duplex_color' => 1800,
+        ];
+
+        $profile = PriceProfile::withoutTenant()
+            ->where('shop_id', $shop->id)
+            ->where('status', 'active')
+            ->first()
+            ?? PriceProfile::withoutTenant()
+                ->where('shop_id', $shop->id)
+                ->latest()
+                ->first();
+
+        if ($profile) {
+            $rules = PriceRule::withoutTenant()
+                ->where('price_profile_id', $profile->id)
+                ->where('is_active', true)
+                ->get();
+
+            $monoSimplex = $rules->first(fn ($r) => $r->color_mode === 'mono' && ($r->sides_mode === 'simplex' || $r->sides_mode === null));
+            $monoDuplex = $rules->first(fn ($r) => $r->color_mode === 'mono' && $r->sides_mode === 'duplex');
+            $colorSimplex = $rules->first(fn ($r) => $r->color_mode === 'color' && ($r->sides_mode === 'simplex' || $r->sides_mode === null));
+            $colorDuplex = $rules->first(fn ($r) => $r->color_mode === 'color' && $r->sides_mode === 'duplex');
+
+            if ($monoSimplex) {
+                $baseMono = (int) $monoSimplex->unit_price_minor;
+                $priceGuide['simplex_mono'] = $baseMono;
+                if ($monoDuplex) {
+                    $priceGuide['duplex_mono'] = (int) $monoDuplex->unit_price_minor;
+                } else {
+                    $ruleData = is_array($monoSimplex->rule_json) ? $monoSimplex->rule_json : [];
+                    if (($ruleData['duplex_model'] ?? 'model_b') === 'model_a' && isset($ruleData['flat_duplex_sheet_rate_minor'])) {
+                        $priceGuide['duplex_mono'] = (int) $ruleData['flat_duplex_sheet_rate_minor'];
+                    } else {
+                        $discount = (int) ($ruleData['duplex_discount_percent'] ?? 20);
+                        $priceGuide['duplex_mono'] = (int) round($baseMono * 2 * (100 - $discount) / 100);
+                    }
+                }
+            }
+
+            if ($colorSimplex) {
+                $baseColor = (int) $colorSimplex->unit_price_minor;
+                $priceGuide['simplex_color'] = $baseColor;
+                if ($colorDuplex) {
+                    $priceGuide['duplex_color'] = (int) $colorDuplex->unit_price_minor;
+                } else {
+                    $ruleData = is_array($colorSimplex->rule_json) ? $colorSimplex->rule_json : [];
+                    $discount = (int) ($ruleData['duplex_discount_percent'] ?? 10);
+                    $priceGuide['duplex_color'] = (int) round($baseColor * 2 * (100 - $discount) / 100);
+                }
+            }
+        }
+
+        $publicSettings['price_guide'] = $priceGuide;
+
         return ApiResponse::success([
             'shop' => [
                 'id' => $shop->id,
@@ -45,16 +125,7 @@ class StorefrontController extends Controller
                 'locale' => $shop->locale,
                 'currency' => $shop->currency,
                 'public_status' => $shop->public_status,
-                'public_settings' => $shop->public_settings_json ?? [
-                    'accepted_formats' => ['pdf', 'png', 'jpg', 'jpeg'],
-                    'max_file_size_mb' => 100,
-                    'price_guide' => [
-                        'simplex_mono' => 300, // 3.00 BDT in poisha
-                        'duplex_mono' => 500,  // 5.00 BDT in poisha
-                        'simplex_color' => 1000, // 10.00 BDT in poisha
-                        'duplex_color' => 1800,  // 18.00 BDT in poisha
-                    ],
-                ],
+                'public_settings' => $publicSettings,
             ],
         ]);
     }
