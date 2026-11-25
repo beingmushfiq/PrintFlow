@@ -13,6 +13,7 @@ describe('Dual-Language Localization Framework', () => {
     'order_status',
     'status',
     'owner',
+    'landing',
     'errors',
   ] as const;
 

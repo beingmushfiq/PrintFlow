@@ -11,7 +11,7 @@ describe('App Component', () => {
     expect(screen.getByRole('heading', { name: 'PrintFlow' })).toBeInTheDocument();
     expect(screen.getByText(/Smart Printing\. Simplified\./i)).toBeInTheDocument();
     expect(screen.getByText(/Autonomous Walk-in Print Operations/i)).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: /Customer Point/i })).toBeInTheDocument();
+    expect(screen.getAllByRole('link', { name: /Customer Point/i }).length).toBeGreaterThanOrEqual(1);
     expect(screen.queryByText(/\/s\/printflow-main/i)).not.toBeInTheDocument();
     expect(screen.getByRole('link', { name: /Owner Login/i })).toBeInTheDocument();
     expect(screen.getByRole('link', { name: /Register New Shop/i })).toBeInTheDocument();
@@ -32,7 +32,7 @@ describe('App Component', () => {
     expect(langButton).toHaveTextContent('English');
     expect(screen.getByRole('heading', { name: 'প্রিন্টফ্লো' })).toBeInTheDocument();
     expect(screen.getByText(/স্মার্ট প্রিন্টিং, আরও সহজ।/i)).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: /কাস্টমার পয়েন্ট/i })).toBeInTheDocument();
+    expect(screen.getAllByRole('link', { name: /কাস্টমার পয়েন্ট/i }).length).toBeGreaterThanOrEqual(1);
     expect(screen.getByRole('link', { name: /মালিক লগইন/i })).toBeInTheDocument();
   });
 });

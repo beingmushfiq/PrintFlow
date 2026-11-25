@@ -48,6 +48,16 @@ export default {
           light: '#98A2B3',
           dark: '#475467',
         },
+        obsidian: {
+          DEFAULT: '#070B14',
+          surface: '#0C1427',
+          elevated: '#111C35',
+          border: '#1E293B',
+        },
+        cyanbeam: {
+          DEFAULT: '#00D2FF',
+          soft: 'rgba(0, 210, 255, 0.14)',
+        },
       },
       fontFamily: {
         sans: [
@@ -59,6 +69,19 @@ export default {
           '"Segoe UI"',
           'Roboto',
           'sans-serif',
+        ],
+        display: [
+          'Space Grotesk',
+          'Noto Sans Bengali',
+          'Inter',
+          'sans-serif',
+        ],
+        mono: [
+          'JetBrains Mono',
+          'ui-monospace',
+          'SFMono-Regular',
+          'Menlo',
+          'monospace',
         ],
         bengali: [
           'Noto Sans Bengali',

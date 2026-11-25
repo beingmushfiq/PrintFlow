@@ -40,7 +40,7 @@ i18n
     resources,
     fallbackLng: 'en',
     defaultNS,
-    ns: ['common', 'auth', 'storefront', 'quote', 'payment', 'order_status', 'owner'],
+    ns: ['common', 'auth', 'storefront', 'quote', 'payment', 'order_status', 'status', 'owner', 'landing', 'errors'],
     interpolation: {
       escapeValue: false, // React already escapes values
     },
