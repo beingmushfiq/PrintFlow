@@ -610,4 +610,101 @@ class PrintAgentApiTest extends TestCase
         $this->assertEquals($fileContent, $response->streamedContent());
         $response->assertHeader('X-File-SHA256', hash('sha256', $fileContent));
     }
+
+    public function test_sandbox_payment_auto_enqueues_print_job_and_advances_order_stages(): void
+    {
+        Queue::fake();
+        Storage::fake('local');
+
+        $rawToken = 'pfa_e2e_stage_token';
+        PrintAgent::create([
+            'tenant_id' => $this->tenant->id,
+            'shop_id' => $this->shop->id,
+            'device_name' => 'Counter E2E Agent',
+            'device_uuid' => 'guid-e2e-stage',
+            'public_key_hash' => 'pubkey-e2e-stage',
+            'agent_token' => hash('sha256', $rawToken),
+            'agent_token_hash' => hash('sha256', $rawToken),
+            'status' => 'online',
+        ]);
+
+        $orderToken = 'e2e_order_token_123456';
+        $fileBytes = '%PDF-1.4 automated pipeline test content';
+        Storage::disk('local')->put('orders/e2e.pdf', $fileBytes);
+
+        $order = Order::create([
+            'tenant_id' => $this->tenant->id,
+            'shop_id' => $this->shop->id,
+            'customer_phone' => '01711223344',
+            'public_reference' => 'PF-E2E-101',
+            'public_token_hash' => hash('sha256', $orderToken),
+            'status' => 'uploaded',
+            'total_minor' => 1000,
+        ]);
+
+        OrderFile::create([
+            'tenant_id' => $this->tenant->id,
+            'shop_id' => $this->shop->id,
+            'order_id' => $order->id,
+            'original_name' => 'e2e.pdf',
+            'mime_type_detected' => 'application/pdf',
+            'size_bytes' => strlen($fileBytes),
+            'page_count' => 2,
+            'storage_disk' => 'local',
+            'object_key' => 'orders/e2e.pdf',
+            'sha256_hash' => hash('sha256', $fileBytes),
+            'scan_status' => 'clean',
+            'processing_status' => 'processed',
+        ]);
+
+        // 1. Sandbox payment captures order AND immediately flushes outbox to queued PrintJob
+        $payRes = $this->postJson('/api/v1/public/payments/sandbox/simulate', [
+            'order_token' => $orderToken,
+            'outcome' => 'success',
+            'amount_minor' => 1000,
+        ]);
+        $payRes->assertStatus(200)->assertJsonPath('data.status', 'PAID');
+
+        $this->assertDatabaseHas('print_jobs', [
+            'order_id' => $order->id,
+            'status' => 'queued',
+        ]);
+
+        $this->getJson("/api/v1/public/order/{$orderToken}")
+            ->assertStatus(200)
+            ->assertJsonPath('data.current_stage', 2);
+
+        // 2. Agent polls /jobs/next -> PrintJob leased & parent order enters Stage 3 (PRINTING)
+        $leaseRes = $this->withHeader('Authorization', 'Bearer '.$rawToken)
+            ->postJson('/api/v1/agent/jobs/next');
+        $leaseRes->assertStatus(200);
+        $jobId = $leaseRes->json('data.job_id');
+        $leaseToken = $leaseRes->json('data.lease_token');
+        $downloadUrl = $leaseRes->json('data.download_url');
+        $this->assertNotEmpty($jobId);
+
+        $this->getJson("/api/v1/public/order/{$orderToken}")
+            ->assertStatus(200)
+            ->assertJsonPath('data.status', 'printing')
+            ->assertJsonPath('data.current_stage', 3);
+
+        // 3. Signed download streams file bytes
+        $dlRes = $this->get($downloadUrl);
+        $dlRes->assertStatus(200);
+        $this->assertEquals($fileBytes, $dlRes->streamedContent());
+
+        // 4. Agent ack completes PrintJob -> Order transitions to complete & public timeline reaches READY (Stage 4)
+        $ackRes = $this->withHeader('Authorization', 'Bearer '.$rawToken)
+            ->postJson("/api/v1/agent/jobs/{$jobId}/ack", [
+                'lease_token' => $leaseToken,
+                'spooler_job_id' => 77,
+                'status' => 'completed',
+            ]);
+        $ackRes->assertStatus(200)->assertJsonPath('data.status', 'completed');
+
+        $this->getJson("/api/v1/public/order/{$orderToken}")
+            ->assertStatus(200)
+            ->assertJsonPath('data.status', 'complete')
+            ->assertJsonPath('data.current_stage', 4);
+    }
 }

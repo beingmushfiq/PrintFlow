@@ -13,6 +13,8 @@ Capabilities:
 """
 
 import argparse
+import ctypes
+import ctypes.wintypes
 import hashlib
 import json
 import os
@@ -188,15 +190,230 @@ def send_heartbeat(api_base: str, agent_token: str) -> dict:
     return res.get("data", {})
 
 
+class DOC_INFO_1W(ctypes.Structure):
+    _fields_ = [
+        ("pDocName", ctypes.wintypes.LPWSTR),
+        ("pOutputFile", ctypes.wintypes.LPWSTR),
+        ("pDatatype", ctypes.wintypes.LPWSTR),
+    ]
+
+
+def detect_extension(doc_bytes: bytes) -> str:
+    if doc_bytes.startswith(b"%PDF"):
+        return ".pdf"
+    if doc_bytes.startswith(b"\x89PNG\r\n\x1a\n"):
+        return ".png"
+    if doc_bytes.startswith(b"\xff\xd8\xff"):
+        return ".jpg"
+    return ".bin"
+
+
+def choose_target_printer(printers: list, preferred_printer: str = None) -> dict:
+    if not printers:
+        raise RuntimeError("No printers available on this workstation.")
+
+    if preferred_printer:
+        needle = preferred_printer.strip().lower()
+        for p in printers:
+            if p["name"].lower() == needle or needle in p["name"].lower():
+                return p
+        raise RuntimeError(f"Preferred printer '{preferred_printer}' was not found on this PC.")
+
+    # Prefer physical (non-virtual) default printer, then any physical online printer
+    for p in printers:
+        if p.get("connection_type") != "virtual" and p.get("is_default"):
+            return p
+    for p in printers:
+        if p.get("connection_type") != "virtual" and p.get("status") == "online":
+            return p
+    for p in printers:
+        if p.get("is_default"):
+            return p
+    return printers[0]
+
+
+def find_sumatra_pdf() -> str:
+    candidates = [
+        Path(os.environ.get("LOCALAPPDATA", "")) / "SumatraPDF" / "SumatraPDF.exe",
+        Path(os.environ.get("PROGRAMFILES", r"C:\Program Files")) / "SumatraPDF" / "SumatraPDF.exe",
+        Path(os.environ.get("PROGRAMFILES(X86)", r"C:\Program Files (x86)")) / "SumatraPDF" / "SumatraPDF.exe",
+    ]
+    for candidate in candidates:
+        if candidate.is_file():
+            return str(candidate)
+    import shutil
+    return shutil.which("SumatraPDF") or shutil.which("SumatraPDF.exe") or ""
+
+
+def submit_gdi_image_print(printer_name: str, image_path: Path) -> int:
+    """Print PNG/JPEG via Windows built-in .NET System.Drawing.Printing (GDI, no dialogs)."""
+    escaped_printer = printer_name.replace("'", "''")
+    escaped_file = str(image_path.resolve()).replace("'", "''")
+    ps_script = (
+        "Add-Type -AssemblyName System.Drawing; "
+        f"$img = [System.Drawing.Image]::FromFile('{escaped_file}'); "
+        "$doc = New-Object System.Drawing.Printing.PrintDocument; "
+        f"$doc.PrinterSettings.PrinterName = '{escaped_printer}'; "
+        "if (-not $doc.PrinterSettings.IsValid) { throw 'Invalid Windows printer name'; }; "
+        "$doc.add_PrintPage({ param($s, $e) $e.Graphics.DrawImage($img, $e.MarginBounds); $e.HasMorePages = $false }); "
+        "try { $doc.Print() } finally { $img.Dispose(); $doc.Dispose() }"
+    )
+    proc = subprocess.run(
+        ["powershell", "-NoProfile", "-Command", ps_script],
+        capture_output=True,
+        text=True,
+        timeout=30,
+    )
+    if proc.returncode != 0:
+        raise RuntimeError(proc.stderr.strip() or proc.stdout.strip() or "GDI image print failed")
+    return int(time.time()) % 100000
+
+
+def submit_windows_print(printer_name: str, job_id: str, file_path: Path, doc_bytes: bytes) -> int:
+    """
+    Dispatch document to the Windows printer cleanly:
+    - SumatraPDF (-print-to -silent) for PDFs on GDI printers when installed
+    - Built-in .NET GDI PrintDocument for PNG/JPEG images
+    - Win32 winspool.drv RAW spool submission otherwise (direct PDF/PCL/PS/universal spooler)
+    """
+    ext = file_path.suffix.lower()
+    if ext == ".pdf":
+        sumatra = find_sumatra_pdf()
+        if sumatra:
+            proc = subprocess.run(
+                [sumatra, "-print-to", printer_name, "-silent", str(file_path.resolve())],
+                capture_output=True,
+                text=True,
+                timeout=60,
+            )
+            if proc.returncode != 0:
+                raise RuntimeError(proc.stderr.strip() or proc.stdout.strip() or f"SumatraPDF exited {proc.returncode}")
+            return int(time.time()) % 100000
+    elif ext in (".png", ".jpg", ".jpeg"):
+        return submit_gdi_image_print(printer_name, file_path)
+
+    return submit_win32_raw_spool(printer_name, f"PrintFlow Job #{job_id}", doc_bytes)
+
+
+def submit_win32_raw_spool(printer_name: str, doc_title: str, doc_bytes: bytes) -> int:
+    """Submit document bytes to the Windows Print Spooler via winspool.drv (no GUI dialogs)."""
+    if sys.platform != "win32":
+        raise RuntimeError("Win32 Print Spooler API is only supported on Windows hosts.")
+
+    winspool = ctypes.WinDLL("winspool.drv", use_last_error=True)
+
+    winspool.OpenPrinterW.argtypes = [
+        ctypes.wintypes.LPWSTR,
+        ctypes.POINTER(ctypes.wintypes.HANDLE),
+        ctypes.wintypes.LPVOID,
+    ]
+    winspool.OpenPrinterW.restype = ctypes.wintypes.BOOL
+
+    winspool.StartDocPrinterW.argtypes = [
+        ctypes.wintypes.HANDLE,
+        ctypes.wintypes.DWORD,
+        ctypes.POINTER(DOC_INFO_1W),
+    ]
+    winspool.StartDocPrinterW.restype = ctypes.wintypes.DWORD
+
+    winspool.StartPagePrinter.argtypes = [ctypes.wintypes.HANDLE]
+    winspool.StartPagePrinter.restype = ctypes.wintypes.BOOL
+
+    winspool.WritePrinter.argtypes = [
+        ctypes.wintypes.HANDLE,
+        ctypes.wintypes.LPVOID,
+        ctypes.wintypes.DWORD,
+        ctypes.POINTER(ctypes.wintypes.DWORD),
+    ]
+    winspool.WritePrinter.restype = ctypes.wintypes.BOOL
+
+    winspool.EndPagePrinter.argtypes = [ctypes.wintypes.HANDLE]
+    winspool.EndPagePrinter.restype = ctypes.wintypes.BOOL
+
+    winspool.EndDocPrinter.argtypes = [ctypes.wintypes.HANDLE]
+    winspool.EndDocPrinter.restype = ctypes.wintypes.BOOL
+
+    winspool.ClosePrinter.argtypes = [ctypes.wintypes.HANDLE]
+    winspool.ClosePrinter.restype = ctypes.wintypes.BOOL
+
+    h_printer = ctypes.wintypes.HANDLE()
+    if not winspool.OpenPrinterW(printer_name, ctypes.byref(h_printer), None):
+        err = ctypes.get_last_error()
+        raise RuntimeError(f"OpenPrinterW failed for '{printer_name}' (Win32 error {err})")
+
+    try:
+        doc_info = DOC_INFO_1W(
+            pDocName=doc_title,
+            pOutputFile=None,
+            pDatatype="RAW",
+        )
+        spooler_job_id = winspool.StartDocPrinterW(h_printer, 1, ctypes.byref(doc_info))
+        if spooler_job_id == 0:
+            err = ctypes.get_last_error()
+            raise RuntimeError(f"StartDocPrinterW failed on '{printer_name}' (Win32 error {err})")
+
+        try:
+            if not winspool.StartPagePrinter(h_printer):
+                err = ctypes.get_last_error()
+                raise RuntimeError(f"StartPagePrinter failed (Win32 error {err})")
+
+            try:
+                buf = ctypes.create_string_buffer(doc_bytes, len(doc_bytes))
+                written = ctypes.wintypes.DWORD(0)
+                if not winspool.WritePrinter(h_printer, buf, len(doc_bytes), ctypes.byref(written)):
+                    err = ctypes.get_last_error()
+                    raise RuntimeError(f"WritePrinter failed (Win32 error {err})")
+                if written.value != len(doc_bytes):
+                    raise RuntimeError(
+                        f"Incomplete spool write: wrote {written.value} of {len(doc_bytes)} bytes"
+                    )
+            finally:
+                winspool.EndPagePrinter(h_printer)
+        finally:
+            winspool.EndDocPrinter(h_printer)
+
+        return int(spooler_job_id)
+    finally:
+        winspool.ClosePrinter(h_printer)
+
+
 def lease_next_job(api_base: str, agent_token: str) -> dict:
     url = f"{api_base.rstrip('/')}/api/v1/agent/jobs/next"
     res = api_request(url, method="POST", token=agent_token)
     return res.get("data")
 
 
-def acknowledge_job(api_base: str, agent_token: str, job_id: str, lease_token: str, spooler_job_id: int):
+def acknowledge_job(
+    api_base: str,
+    agent_token: str,
+    job_id: str,
+    lease_token: str,
+    spooler_job_id: int = None,
+    status: str = "completed",
+):
     url = f"{api_base.rstrip('/')}/api/v1/agent/jobs/{job_id}/ack"
-    payload = {"lease_token": lease_token, "spooler_job_id": spooler_job_id}
+    payload = {"lease_token": lease_token, "status": status}
+    if spooler_job_id is not None:
+        payload["spooler_job_id"] = int(spooler_job_id)
+    api_request(url, method="POST", data=payload, token=agent_token)
+
+
+def fail_job(
+    api_base: str,
+    agent_token: str,
+    job_id: str,
+    lease_token: str,
+    error_code: str,
+    error_message: str,
+    retryable: bool = False,
+):
+    url = f"{api_base.rstrip('/')}/api/v1/agent/jobs/{job_id}/fail"
+    payload = {
+        "lease_token": lease_token,
+        "error_code": error_code[:64],
+        "error_message": error_message[:1000],
+        "retryable": retryable,
+    }
     api_request(url, method="POST", data=payload, token=agent_token)
 
 
@@ -225,12 +442,19 @@ def secure_shred(file_path: Path):
         print(f"[Agent] Warning during secure shred: {e}")
 
 
-def run_agent_loop(api_base: str, agent_token: str, device_name: str):
+def run_agent_loop(
+    api_base: str,
+    agent_token: str,
+    device_name: str,
+    preferred_printer: str = None,
+    simulate: bool = False,
+):
     print(f"\n=======================================================")
     print(f" [PrintFlow Agent] RUNNING ON {device_name}")
     print(f" Connected to: {api_base}")
-    print(f" Privacy: Ephemeral spooling with automated file shredding")
-    print(f" Status: Online (Press Ctrl+C to exit)")
+    print(f" Mode:         {'SIMULATED SPOOLER (--simulate)' if simulate else 'LIVE WINDOWS PRINT SPOOLER'}")
+    print(f" Privacy:      Ephemeral spooling with automated file shredding")
+    print(f" Status:       Online (Press Ctrl+C to exit)")
     print(f"=======================================================\n")
 
     # Discover and sync printers
@@ -239,6 +463,12 @@ def run_agent_loop(api_base: str, agent_token: str, device_name: str):
     for p in printers:
         def_tag = " (DEFAULT)" if p.get("is_default") else ""
         print(f"   * {p['name']} [{p['connection_type']}]{def_tag}")
+
+    if not simulate and all(p.get("connection_type") == "virtual" for p in printers):
+        print(
+            "[Agent] [WARN] Only virtual printers detected (e.g. AnyDesk / PDF). "
+            "Connect a physical USB/network printer for real paper output, or pass --simulate for dry runs."
+        )
 
     try:
         synced_count = sync_printers(api_base, agent_token, printers)
@@ -275,37 +505,73 @@ def run_agent_loop(api_base: str, agent_token: str, device_name: str):
                 print(f"\n[Agent] ---> LEASED NEW PRINT JOB: #{job_id}")
                 print(f"        Pages: {job.get('pages_total')} | Settings: {job.get('print_settings')}")
 
-                # Download document bytes
-                req = urllib.request.Request(
-                    download_url,
-                    headers={"Authorization": f"Bearer {agent_token}"},
-                )
-                with urllib.request.urlopen(req, timeout=30) as resp:
-                    doc_bytes = resp.read()
+                tmp_file = None
+                try:
+                    # Download document bytes
+                    req = urllib.request.Request(
+                        download_url,
+                        headers={"Authorization": f"Bearer {agent_token}"},
+                    )
+                    with urllib.request.urlopen(req, timeout=30) as resp:
+                        doc_bytes = resp.read()
 
-                # Verify SHA-256
-                actual_hash = compute_sha256(doc_bytes)
-                if expected_hash and actual_hash.lower() != expected_hash.lower():
-                    raise RuntimeError(f"Integrity check failed! Expected {expected_hash}, got {actual_hash}")
+                    # Verify SHA-256
+                    actual_hash = compute_sha256(doc_bytes)
+                    if expected_hash and actual_hash.lower() != expected_hash.lower():
+                        raise RuntimeError(
+                            f"Integrity check failed! Expected {expected_hash}, got {actual_hash}"
+                        )
 
-                print(f"[Agent] [Integrity Verified] SHA-256 match confirmed ({len(doc_bytes)} bytes)")
+                    print(f"[Agent] [Integrity Verified] SHA-256 match confirmed ({len(doc_bytes)} bytes)")
 
-                # Spool
-                tmp_file = Path(__file__).parent / f"job_{job_id}.tmp"
-                with open(tmp_file, "wb") as f:
-                    f.write(doc_bytes)
+                    # Write ephemeral temp artifact
+                    ext = detect_extension(doc_bytes)
+                    tmp_file = Path(__file__).parent / f"job_{job_id}{ext}"
+                    with open(tmp_file, "wb") as f:
+                        f.write(doc_bytes)
 
-                spooler_id = random.randint(1000, 9999)
-                print(f"[Agent] [Spooler Submitted] Win32 Spooler Job ID: {spooler_id}")
+                    target_printer = choose_target_printer(printers, preferred_printer)
+                    print(f"[Agent] [Target Printer] {target_printer['name']} ({target_printer['connection_type']})")
 
-                # Ack
-                acknowledge_job(api_base, agent_token, job_id, lease_tok, spooler_id)
-                print(f"[Agent] [Ack Sent] Job #{job_id} acknowledged to backend")
+                    # Notify backend that spooling started
+                    acknowledge_job(api_base, agent_token, job_id, lease_tok, status="printing")
 
-                # Ephemeral Shred
-                secure_shred(tmp_file)
-                acknowledge_shred(api_base, agent_token, job_id)
-                print(f"[Agent] [Shred Ack] Temp print artifacts shredded with zero trace.\n")
+                    if simulate or sys.platform != "win32":
+                        spooler_id = random.randint(1000, 9999)
+                        print(f"[Agent] [Simulated Spooler] Job ID: {spooler_id}")
+                    else:
+                        spooler_id = submit_windows_print(
+                            target_printer["name"],
+                            job_id,
+                            tmp_file,
+                            doc_bytes,
+                        )
+                        print(f"[Agent] [Spooler Submitted] Win32 Spooler Job ID: {spooler_id}")
+
+                    # Complete Ack
+                    acknowledge_job(api_base, agent_token, job_id, lease_tok, spooler_id, status="completed")
+                    print(f"[Agent] [Ack Sent] Job #{job_id} acknowledged to backend")
+
+                    # Ephemeral Shred
+                    secure_shred(tmp_file)
+                    acknowledge_shred(api_base, agent_token, job_id)
+                    print(f"[Agent] [Shred Ack] Temp print artifacts shredded with zero trace.\n")
+                except Exception as job_err:
+                    print(f"[Agent] [Job Failed] #{job_id}: {job_err}")
+                    try:
+                        fail_job(
+                            api_base,
+                            agent_token,
+                            job_id,
+                            lease_tok,
+                            "WIN32_PRINT_ERROR",
+                            str(job_err),
+                            retryable=False,
+                        )
+                    except Exception as fail_err:
+                        print(f"[Agent] Warning: failed to report job error to backend: {fail_err}")
+                    if tmp_file is not None:
+                        secure_shred(tmp_file)
         except Exception as e:
             print(f"[Agent] Polling error: {e}")
 
@@ -317,6 +583,8 @@ def main():
     parser.add_argument("--pair", type=str, help="6-digit pairing code from PrintFlow Owner Dashboard")
     parser.add_argument("--api", type=str, default=DEFAULT_API_BASE, help=f"Backend API URL (default: {DEFAULT_API_BASE})")
     parser.add_argument("--device", type=str, default=f"Counter-WinStation-{socket.gethostname()[:8]}", help="Device workstation label")
+    parser.add_argument("--printer", type=str, default=None, help="Explicit Windows printer name to target")
+    parser.add_argument("--simulate", action="store_true", help="Simulate hardware spooling without submitting to Win32 Print Spooler")
     parser.add_argument("--reset", action="store_true", help="Forget saved pairing credentials and re-enroll")
 
     args = parser.parse_args()
@@ -387,7 +655,13 @@ def main():
             sys.exit(1)
 
     try:
-        run_agent_loop(api_base, agent_token, device_name)
+        run_agent_loop(
+            api_base,
+            agent_token,
+            device_name,
+            preferred_printer=args.printer,
+            simulate=args.simulate,
+        )
     except KeyboardInterrupt:
         print("\n[Agent] Stopped cleanly.")
 

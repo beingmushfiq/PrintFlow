@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Api\Public;
 
 use App\Domain\Payment\Factories\PaymentGatewayFactory;
+use App\Domain\Payment\Outbox\OutboxProcessor;
 use App\Domain\Payment\Outbox\PaymentCaptureService;
 use App\Http\Controllers\Controller;
 use App\Http\Responses\ApiResponse;
@@ -201,6 +202,12 @@ class PaymentCheckoutController extends Controller
                 'gateway' => 'sandbox',
                 'amount_minor' => $amountMinor,
             ]);
+
+            try {
+                app(OutboxProcessor::class)->processPending(10);
+            } catch (\Throwable $e) {
+                report($e);
+            }
 
             return ApiResponse::success([
                 'status' => 'PAID',

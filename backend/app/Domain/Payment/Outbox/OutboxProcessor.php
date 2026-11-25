@@ -64,7 +64,7 @@ class OutboxProcessor
                     $orderId = $event->payload_json['order_id'] ?? null;
                     if ($orderId) {
                         $order = Order::withoutTenant()->find($orderId);
-                        if ($order && $order->status === 'paid') {
+                        if ($order && strtolower((string) $order->status) === 'paid') {
                             $orderFiles = $order->relationLoaded('files')
                                 ? $order->files
                                 : $order->files()->withoutTenant()->get();

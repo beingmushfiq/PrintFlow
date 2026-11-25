@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Api\Public;
 
 use App\Domain\Payment\Drivers\SslCommerzDriver;
+use App\Domain\Payment\Outbox\OutboxProcessor;
 use App\Domain\Payment\Outbox\PaymentCaptureService;
 use App\Domain\Payment\Services\WebhookSignatureVerifier;
 use App\Http\Controllers\Controller;
@@ -111,6 +112,11 @@ class WebhookController extends Controller
                     'card_issuer' => $payload['card_issuer'] ?? null,
                     'amount' => $payload['amount'] ?? null,
                 ]);
+                try {
+                    app(OutboxProcessor::class)->processPending(10);
+                } catch (\Throwable $e) {
+                    report($e);
+                }
             }
         }
 
@@ -178,6 +184,11 @@ class WebhookController extends Controller
             $order = Order::withoutTenant()->find($payment->order_id);
             if ($order && strtolower((string) ($payload['status'] ?? 'success')) === 'success') {
                 $this->captureService->capture($payment, $order, $payload);
+                try {
+                    app(OutboxProcessor::class)->processPending(10);
+                } catch (\Throwable $e) {
+                    report($e);
+                }
             }
         }
 

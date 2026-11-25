@@ -21,11 +21,15 @@ class PrintJobLeaseService
     public function leaseNextJob(PrintAgent $agent, ?string $printerId = null): ?array
     {
         return DB::transaction(function () use ($agent, $printerId) {
-            $query = PrintJob::where('tenant_id', $agent->tenant_id)
+            $query = PrintJob::withoutTenant()
+                ->where('tenant_id', $agent->tenant_id)
                 ->where('shop_id', $agent->shop_id)
                 ->where('status', 'queued')
-                ->orderBy('created_at', 'asc')
-                ->lock('for update skip locked');
+                ->orderBy('created_at', 'asc');
+
+            if (DB::connection()->getDriverName() !== 'sqlite') {
+                $query->lock('for update skip locked');
+            }
 
             if ($printerId) {
                 $query->where(function ($q) use ($printerId) {
@@ -51,6 +55,11 @@ class PrintJobLeaseService
                 'leased_at' => now(),
                 'lease_expires_at' => $expiresAt,
             ]);
+
+            $order = $job->order()->withoutTenant()->first();
+            if ($order && strtolower((string) $order->status) === 'paid') {
+                $order->update(['status' => 'printing']);
+            }
 
             $attemptNumber = ((int) $job->attempts()->max('attempt_number')) + 1;
             PrintJobAttempt::create([
@@ -118,6 +127,11 @@ class PrintJobLeaseService
                 ]);
             }
 
+            $order = $job->order()->withoutTenant()->first();
+            if ($order && strtolower((string) $order->status) === 'paid') {
+                $order->update(['status' => 'printing']);
+            }
+
             return $job;
         }
 
@@ -143,16 +157,20 @@ class PrintJobLeaseService
         }
 
         // Check if parent order is fully printed
-        $order = $job->order;
-        if ($order && ! $order->printJobs()->where('status', '!=', 'completed')->exists()) {
+        $order = $job->order()->withoutTenant()->first();
+        if ($order && ! $order->printJobs()->withoutTenant()->where('status', '!=', 'completed')->exists()) {
             $order->update([
                 'status' => 'complete',
                 'completed_at' => now(),
             ]);
         }
 
-        // Dispatch asynchronous remote file deletion
-        DeleteOrderFileRemotely::dispatch($job->order_file_id, $job->tenant_id, 'order_completed');
+        // Dispatch asynchronous remote file deletion without blocking job ack if queue fails
+        try {
+            DeleteOrderFileRemotely::dispatch($job->order_file_id, $job->tenant_id, 'order_completed');
+        } catch (\Throwable $e) {
+            report($e);
+        }
 
         return $job;
     }

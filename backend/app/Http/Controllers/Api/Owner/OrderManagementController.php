@@ -352,7 +352,7 @@ class OrderManagementController extends Controller
             ]);
         }
 
-        $eligibleStatuses = ['ready', 'printed', 'completed', 'paid', 'READY', 'PRINTED', 'printer_confirmed'];
+        $eligibleStatuses = ['ready', 'printed', 'completed', 'complete', 'paid', 'READY', 'PRINTED', 'printer_confirmed'];
         if (! in_array($order->status, $eligibleStatuses, true)) {
             return ApiResponse::error('Order is not yet printed or ready for collection.', 422, [], 'NOT_READY_FOR_COLLECTION');
         }

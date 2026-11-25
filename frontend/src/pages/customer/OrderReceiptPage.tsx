@@ -38,7 +38,7 @@ interface ReceiptData {
 
 export const OrderReceiptPage: React.FC = () => {
   const { token } = useParams<{ token: string }>();
-  const { t } = useTranslation();
+  const { t } = useTranslation(['common', 'order_status']);
   const [receipt, setReceipt] = useState<ReceiptData | null>(null);
   usePageTitle({ subtitle: receipt ? `Receipt #${receipt.publicReference}` : 'Order Receipt' });
   const [isLoading, setIsLoading] = useState(true);
@@ -115,7 +115,7 @@ export const OrderReceiptPage: React.FC = () => {
           className="flex items-center gap-1.5 text-sm font-medium text-slate-600 hover:text-slate-900"
         >
           <ArrowLeft className="w-4 h-4" />
-          <span>{t('common.back')}</span>
+          <span>{t('common:back')}</span>
         </Link>
         <button
           onClick={handlePrint}

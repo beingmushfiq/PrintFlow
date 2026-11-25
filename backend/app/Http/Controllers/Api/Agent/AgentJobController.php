@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Api\Agent;
 
 use App\Domain\FileDeletion\FilePurgeService;
+use App\Domain\Payment\Outbox\OutboxProcessor;
 use App\Domain\PrintJob\PrintJobLeaseService;
 use App\Http\Controllers\Controller;
 use App\Http\Responses\ApiResponse;
@@ -17,8 +18,14 @@ use Symfony\Component\HttpFoundation\Response;
 
 class AgentJobController extends Controller
 {
-    public function next(Request $request, PrintJobLeaseService $leaseService): JsonResponse
+    public function next(Request $request, PrintJobLeaseService $leaseService, OutboxProcessor $outboxProcessor): JsonResponse
     {
+        try {
+            $outboxProcessor->processPending(20);
+        } catch (\Throwable $e) {
+            report($e);
+        }
+
         /** @var PrintAgent $agent */
         $agent = $request->attributes->get('agent') ?? app(PrintAgent::class);
 
@@ -116,13 +123,21 @@ class AgentJobController extends Controller
         $disk = $orderFile->storage_disk ?: config('filesystems.default', 'local');
 
         if (! Storage::disk($disk)->exists($orderFile->object_key)) {
-            // Check if mock or inline fixture exists
-            if (file_exists($orderFile->object_key)) {
-                return response()->file($orderFile->object_key, [
-                    'Content-Type' => $orderFile->mime_type_detected ?? 'application/pdf',
-                    'X-File-SHA256' => $job->file_hash,
-                ]);
+            $fallbackPaths = [
+                $orderFile->object_key,
+                storage_path('app/' . ltrim($orderFile->object_key, '/\\')),
+                storage_path('app/private/' . ltrim($orderFile->object_key, '/\\')),
+            ];
+
+            foreach ($fallbackPaths as $candidatePath) {
+                if (is_string($candidatePath) && file_exists($candidatePath)) {
+                    return response()->file($candidatePath, [
+                        'Content-Type' => $orderFile->mime_type_detected ?? 'application/pdf',
+                        'X-File-SHA256' => $job->file_hash,
+                    ]);
+                }
             }
+
             abort(404, 'Physical storage object missing');
         }
 

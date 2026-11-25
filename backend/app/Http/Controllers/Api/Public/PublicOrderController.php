@@ -52,6 +52,8 @@ class PublicOrderController extends Controller
             'paid' => 2,
             'printing' => 3,
             'ready' => 4,
+            'complete' => 4,
+            'printed' => 4,
             'collected' => 5,
             'completed' => 5,
         ];
