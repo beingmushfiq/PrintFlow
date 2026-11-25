@@ -106,8 +106,12 @@ class StorefrontController extends Controller
                     $priceGuide['duplex_color'] = (int) $colorDuplex->unit_price_minor;
                 } else {
                     $ruleData = is_array($colorSimplex->rule_json) ? $colorSimplex->rule_json : [];
-                    $discount = (int) ($ruleData['duplex_discount_percent'] ?? 10);
-                    $priceGuide['duplex_color'] = (int) round($baseColor * 2 * (100 - $discount) / 100);
+                    if (($ruleData['duplex_model'] ?? 'model_b') === 'model_a' && isset($ruleData['flat_duplex_sheet_rate_minor'])) {
+                        $priceGuide['duplex_color'] = (int) $ruleData['flat_duplex_sheet_rate_minor'];
+                    } else {
+                        $discount = (int) ($ruleData['duplex_discount_percent'] ?? 10);
+                        $priceGuide['duplex_color'] = (int) round($baseColor * 2 * (100 - $discount) / 100);
+                    }
                 }
             }
         }

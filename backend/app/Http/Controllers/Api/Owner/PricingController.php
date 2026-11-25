@@ -154,6 +154,10 @@ class PricingController extends Controller
             'calculation_version' => ($profile->calculation_version ?? 1) + 1,
         ]);
 
+        if ($shop->default_price_profile_id !== $profile->id) {
+            $shop->update(['default_price_profile_id' => $profile->id]);
+        }
+
         PriceRule::withoutTenant()->updateOrCreate(
             [
                 'tenant_id' => $shop->tenant_id,

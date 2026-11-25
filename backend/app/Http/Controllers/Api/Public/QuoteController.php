@@ -10,6 +10,8 @@ use App\Domain\Pricing\Services\QuoteSnapshotGenerator;
 use App\Http\Controllers\Controller;
 use App\Http\Responses\ApiResponse;
 use App\Models\Order;
+use App\Models\PriceProfile;
+use App\Models\PriceRule;
 use App\Models\Quote;
 use App\Models\Shop;
 use Illuminate\Http\JsonResponse;
@@ -100,6 +102,24 @@ class QuoteController extends Controller
         }
 
         $shop = Shop::withoutTenant()->find($order->shop_id);
+        $activeProfileId = $shop?->default_price_profile_id;
+        if (! $activeProfileId && $shop) {
+            $activeProfileId = PriceProfile::withoutTenant()
+                ->where('shop_id', $shop->id)
+                ->where('status', 'active')
+                ->value('id');
+        }
+
+        if (! isset($validated['duplex_model']) && $activeProfileId) {
+            $rule = PriceRule::withoutTenant()
+                ->where('price_profile_id', $activeProfileId)
+                ->where('color_mode', $colorMode)
+                ->where('is_active', true)
+                ->first();
+            if ($rule && isset($rule->rule_json['duplex_model'])) {
+                $duplexModel = (string) $rule->rule_json['duplex_model'];
+            }
+        }
 
         $pricingRequest = new PricingRequest(
             totalPages: $effectivePages,
@@ -108,13 +128,13 @@ class QuoteController extends Controller
             sidesMode: $sidesMode,
             paperSize: $paperSize,
             pageRange: $pageRange,
-            priceProfileId: $shop?->default_price_profile_id,
+            priceProfileId: $activeProfileId,
             fileId: $fileId,
             duplexModel: $duplexModel,
         );
 
         $quoteData = $this->pricingEngine->calculate($pricingRequest);
-        $quote = $this->quoteGenerator->generate($order, $quoteData, $shop?->default_price_profile_id);
+        $quote = $this->quoteGenerator->generate($order, $quoteData, $activeProfileId);
 
         return ApiResponse::success([
             'quote' => [
