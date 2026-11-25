@@ -58,12 +58,17 @@ export const LandingHome: React.FC = () => {
       {/* Main Content */}
       <main className="flex-1 max-w-4xl w-full mx-auto p-6 space-y-8 flex flex-col justify-center">
         <div className="bg-surface border border-border rounded-2xl p-8 shadow-sm space-y-6 text-center max-w-2xl mx-auto">
-          <h2 className="text-3xl font-extrabold text-ink tracking-tight">
-            Autonomous Walk-in Print Operations
-          </h2>
+          <div className="space-y-2">
+            <p className="text-sm font-bold uppercase tracking-wider text-accent">
+              {t('common:hero_heading')}
+            </p>
+            <h2 className="text-3xl font-extrabold text-ink tracking-tight">
+              {t('common:hero_title')}
+            </h2>
+          </div>
 
           <p className="text-sm text-muted max-w-lg mx-auto">
-            Scan counter QR code to upload documents, receive instant duplex quotes in Poisha, and print autonomously.
+            {t('common:hero_subtitle')}
           </p>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
@@ -73,7 +78,7 @@ export const LandingHome: React.FC = () => {
             >
               <div className="flex items-center space-x-3">
                 <Store className="w-5 h-5" />
-                <span className="text-left">Customer Storefront (/s/printflow-main)</span>
+                <span className="text-left">{t('common:customer_point')}</span>
               </div>
               <ArrowRight className="w-4 h-4" />
             </Link>
@@ -84,7 +89,7 @@ export const LandingHome: React.FC = () => {
             >
               <div className="flex items-center space-x-3">
                 <LogIn className="w-5 h-5 text-accent" />
-                <span className="text-left">Owner Console &amp; QR Studio</span>
+                <span className="text-left">{t('common:owner_console_qr')}</span>
               </div>
               <ArrowRight className="w-4 h-4 text-muted" />
             </Link>
@@ -96,14 +101,14 @@ export const LandingHome: React.FC = () => {
               className="inline-flex items-center space-x-1.5 px-4 py-2 rounded-lg border border-border bg-paper hover:bg-surface hover:border-accent text-ink font-semibold text-xs transition-all shadow-xs"
             >
               <LogIn className="w-3.5 h-3.5 text-accent" />
-              <span>Owner Login</span>
+              <span>{t('common:owner_login')}</span>
             </Link>
             <Link
               to="/register"
               className="inline-flex items-center space-x-1.5 px-4 py-2 rounded-lg border border-border bg-paper hover:bg-surface hover:border-accent text-ink font-semibold text-xs transition-all shadow-xs"
             >
               <UserPlus className="w-3.5 h-3.5 text-accent" />
-              <span>Register New Shop</span>
+              <span>{t('common:register_new_shop')}</span>
             </Link>
           </div>
         </div>
@@ -111,7 +116,7 @@ export const LandingHome: React.FC = () => {
 
       {/* Footer */}
       <footer className="border-t border-border bg-surface px-6 py-4 text-center text-xs text-muted">
-        <p>&copy; 2026 PrintFlow by DevCenterPoint</p>
+        <p>{t('common:footer_copyright')}</p>
       </footer>
     </div>
   );

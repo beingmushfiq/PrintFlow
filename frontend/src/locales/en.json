@@ -20,7 +20,15 @@
     "english": "English",
     "currency_symbol": "৳",
     "currency_code": "BDT",
-    "powered_by": "Powered by PrintFlow"
+    "powered_by": "Powered by PrintFlow",
+    "hero_heading": "Smart Printing. Simplified.",
+    "hero_title": "Autonomous Walk-in Print Operations",
+    "hero_subtitle": "Scan counter QR code to upload documents, receive instant duplex quotes in Poisha, and print autonomously.",
+    "customer_point": "Customer Point",
+    "owner_console_qr": "Owner Console & QR Studio",
+    "owner_login": "Owner Login",
+    "register_new_shop": "Register New Shop",
+    "footer_copyright": "© 2026 PrintFlow by DevCenterPoint"
   },
   "auth": {
     "login": "Log In",
