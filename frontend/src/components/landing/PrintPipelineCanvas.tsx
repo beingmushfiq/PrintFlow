@@ -421,12 +421,12 @@ export const PrintPipelineCanvas: React.FC<PrintPipelineCanvasProps> = ({
     const stageGroup = new THREE.Group();
     scene.add(stageGroup);
 
-    // 1. Hardware-line CAD floor grid (near-zero GPU cost vs full-viewport fragment shader)
-    const floorGrid = new THREE.GridHelper(11, 14, 0x245bdb, 0x111c35);
-    floorGrid.position.y = -1.25;
+    // 1. Circular polar floor grid — naturally fades into borderless Obsidian with zero rectangular edge cutoff!
+    const floorGrid = new THREE.PolarGridHelper(3.35, 10, 5, 48, 0x245bdb, 0x101c36);
+    floorGrid.position.set(0.05, -1.25, 0.25);
     const gridMat = floorGrid.material as THREE.Material;
     gridMat.transparent = true;
-    gridMat.opacity = 0.42;
+    gridMat.opacity = 0.38;
     materials.push(gridMat);
     geometries.push(floorGrid.geometry);
     stageGroup.add(floorGrid);

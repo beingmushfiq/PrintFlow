@@ -143,15 +143,6 @@ export const LandingHome: React.FC = () => {
     ? 3000
     : 4000;
 
-  const activeTelemetryLabel =
-    activeChapter === 1
-      ? t('landing:module_qr_intake')
-      : activeChapter === 2
-      ? t('landing:module_poisha_duplex')
-      : activeChapter === 3
-      ? t('landing:module_win32_spooler')
-      : t('landing:module_default');
-
   const jumpToChapter = (chapterIdx: number, id?: string) => {
     setActiveChapter(chapterIdx);
     if (id) {
@@ -216,19 +207,19 @@ export const LandingHome: React.FC = () => {
         </div>
       </header>
 
-      {/* Main Obsidian 3D Choreography Container (clean solid Obsidian backdrop avoids scroll gradient repaint) */}
+      {/* Main Obsidian 3D Choreography Container — pure seamless spatial field without card borders */}
       <div className="relative bg-[#070B14] overflow-x-clip">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 lg:grid-cols-12 lg:gap-10 items-start">
-            {/* Sticky 3D Stage (compositor-isolated, zero backdrop-blur or oversized box-shadow) */}
-            <div className="lg:col-span-6 lg:order-2 lg:sticky lg:top-16 pt-4 lg:py-8 w-full min-w-0">
-              <div className="relative h-[280px] sm:h-[360px] lg:h-[calc(100vh-7.5rem)] w-full rounded-3xl border border-white/10 bg-[#0A1120] overflow-hidden shadow-lg transform-gpu">
-                {/* Ambient radial glow backdrop */}
+          <div className="grid grid-cols-1 lg:grid-cols-12 lg:gap-12 items-start">
+            {/* Sticky Borderless 3D Stage */}
+            <div className="lg:col-span-6 lg:order-2 lg:sticky lg:top-16 pt-2 lg:py-6 w-full min-w-0">
+              <div className="relative h-[290px] sm:h-[380px] lg:h-[calc(100vh-6rem)] w-full overflow-hidden transform-gpu">
+                {/* Soft radial atmospheric spotlight seamlessly embedded in #070B14 */}
                 <div
                   className="absolute inset-0 pointer-events-none"
                   style={{
                     background:
-                      'radial-gradient(circle at 52% 45%, rgba(36, 91, 219, 0.25) 0%, rgba(0, 210, 255, 0.08) 42%, transparent 72%)',
+                      'radial-gradient(circle at 50% 48%, rgba(36, 91, 219, 0.22) 0%, rgba(0, 210, 255, 0.06) 36%, rgba(7, 11, 20, 0) 68%)',
                   }}
                 />
 
@@ -257,41 +248,13 @@ export const LandingHome: React.FC = () => {
                   />
                 )}
 
-                {/* Top HUD Overlay Bar (solid dark pills, zero blur over canvas) */}
-                <div className="absolute top-3.5 left-3.5 right-3.5 flex items-center justify-between gap-2 pointer-events-none">
-                  <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#070B14]/95 border border-white/15 text-[11px] font-mono text-slate-200 max-w-[64%] min-w-0">
-                    <span className="w-2 h-2 rounded-full bg-emerald-400 shrink-0" />
-                    <span className="truncate">{activeTelemetryLabel}</span>
-                  </div>
-                  <div className="flex items-center gap-1 bg-[#070B14]/95 border border-white/15 p-1 rounded-full pointer-events-auto">
-                    {[0, 1, 2, 3].map((idx) => (
-                      <button
-                        key={idx}
-                        type="button"
-                        onClick={() => jumpToChapter(idx, `chapter-${idx}`)}
-                        aria-label={`Stage 0${idx}`}
-                        className={`px-2 py-0.5 rounded-full text-[10px] font-mono transition-colors ${
-                          activeChapter === idx
-                            ? 'bg-[#245BDB] text-white font-bold'
-                            : 'text-slate-400 hover:text-white'
-                        }`}
-                      >
-                        {`0${idx}`}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Bottom Quick Lens Controls */}
-                <div className="absolute bottom-3.5 left-3.5 right-3.5 flex items-center justify-between gap-2">
-                  <span className="hidden sm:inline-block text-[11px] font-mono text-slate-300 bg-[#070B14]/95 px-2.5 py-1 rounded-lg border border-white/15">
-                    {`0${activeChapter} / 03 • ${t('landing:stage_indicator')}`}
-                  </span>
-                  <div className="flex items-center gap-1.5 ml-auto bg-[#070B14]/95 p-1 rounded-xl border border-white/15">
+                {/* Minimal subtle B&W / Color switch tucked cleanly at bottom-right corner */}
+                <div className="absolute bottom-3 right-3 z-10">
+                  <div className="inline-flex items-center gap-1 bg-white/[0.04] p-1 rounded-full border border-white/10">
                     <button
                       type="button"
                       onClick={() => setColorMode(false)}
-                      className={`px-2.5 py-1 rounded-lg text-[11px] font-semibold transition-colors ${
+                      className={`px-2.5 py-1 rounded-full text-[11px] font-semibold transition-colors ${
                         !colorMode
                           ? 'bg-white text-[#070B14]'
                           : 'text-slate-300 hover:text-white'
@@ -302,7 +265,7 @@ export const LandingHome: React.FC = () => {
                     <button
                       type="button"
                       onClick={() => setColorMode(true)}
-                      className={`px-2.5 py-1 rounded-lg text-[11px] font-semibold transition-colors ${
+                      className={`px-2.5 py-1 rounded-full text-[11px] font-semibold transition-colors ${
                         colorMode
                           ? 'bg-[#00D2FF] text-[#070B14]'
                           : 'text-slate-300 hover:text-white'
@@ -315,21 +278,21 @@ export const LandingHome: React.FC = () => {
               </div>
             </div>
 
-            {/* Scroll Storytelling Column */}
-            <div className="lg:col-span-6 lg:order-1 space-y-10 lg:space-y-0 min-w-0">
+            {/* Open-Air Editorial Storytelling Column */}
+            <div className="lg:col-span-6 lg:order-1 space-y-16 lg:space-y-0 min-w-0">
               {/* Chapter 0: Hero & Immediate Platform Brief */}
               <section
                 id="chapter-0"
                 ref={chapter0Ref}
-                className="min-h-[auto] lg:min-h-[calc(100vh-4.5rem)] py-6 sm:py-10 lg:py-16 flex flex-col justify-center space-y-5 sm:space-y-6"
+                className="min-h-[auto] lg:min-h-[calc(100vh-4.5rem)] py-6 sm:py-10 lg:py-16 flex flex-col justify-center space-y-6"
               >
-                <div className="inline-flex items-center gap-2 self-start px-3.5 py-1.5 rounded-full border border-[#00D2FF]/35 bg-[#00D2FF]/15 text-[#00D2FF] text-xs font-semibold tracking-wide">
+                <div className="inline-flex items-center gap-2 self-start px-3.5 py-1.5 rounded-full border border-[#00D2FF]/30 bg-[#00D2FF]/10 text-[#00D2FF] text-xs font-semibold tracking-wide">
                   <Sparkles className="w-3.5 h-3.5 shrink-0" />
                   <span>{t('common:hero_heading')}</span>
                 </div>
 
-                <div className="space-y-3.5">
-                  <h2 className="font-display text-3xl sm:text-5xl font-bold text-white tracking-tight leading-[1.12]">
+                <div className="space-y-4">
+                  <h2 className="font-display text-3xl sm:text-5xl font-bold text-white tracking-tight leading-[1.1]">
                     {t('common:hero_title')}
                   </h2>
                   <p className="text-sm sm:text-base text-slate-300 leading-relaxed max-w-xl">
@@ -342,27 +305,27 @@ export const LandingHome: React.FC = () => {
 
                 {/* Inline Platform Capabilities Proof Row */}
                 <div className="flex flex-wrap gap-2">
-                  <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#0C1427] border border-white/10 text-xs font-medium text-slate-200">
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/[0.04] border border-white/10 text-xs font-medium text-slate-200">
                     <QrCode className="w-3.5 h-3.5 text-[#00D2FF]" />
                     <span>{t('landing:pill_zero_app')}</span>
                   </span>
-                  <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#0C1427] border border-white/10 text-xs font-medium text-slate-200">
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/[0.04] border border-white/10 text-xs font-medium text-slate-200">
                     <Calculator className="w-3.5 h-3.5 text-emerald-400" />
                     <span>{t('landing:pill_poisha')}</span>
                   </span>
-                  <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#0C1427] border border-white/10 text-xs font-medium text-slate-200">
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/[0.04] border border-white/10 text-xs font-medium text-slate-200">
                     <ShieldCheck className="w-3.5 h-3.5 text-blue-400" />
                     <span>{t('landing:pill_shred')}</span>
                   </span>
                 </div>
 
-                {/* Shop Selector + Primary Actions Dock */}
-                <div className="rounded-2xl border border-white/15 bg-[#0C1427] p-4 sm:p-5 space-y-4 shadow-xl">
+                {/* Seamless Floating Action Dock */}
+                <div className="pt-2 space-y-4 max-w-xl">
                   {shops.length > 1 && (
                     <div className="space-y-1.5">
                       <label
                         htmlFor="landing-shop-select"
-                        className="block text-xs font-semibold text-slate-300"
+                        className="block text-xs font-semibold text-slate-400"
                       >
                         {t('common:select_shop')}
                       </label>
@@ -371,10 +334,10 @@ export const LandingHome: React.FC = () => {
                           id="landing-shop-select"
                           value={selectedSlug}
                           onChange={(e) => setSelectedSlug(e.target.value)}
-                          className="w-full h-10 pl-3 pr-9 text-xs font-semibold rounded-lg border border-white/15 bg-[#070B14] text-white appearance-none focus:outline-none focus:ring-2 focus:ring-[#00D2FF]/40 focus:border-[#00D2FF] cursor-pointer"
+                          className="w-full h-11 pl-3.5 pr-9 text-xs font-semibold rounded-xl border border-white/15 bg-white/[0.04] text-white appearance-none focus:outline-none focus:ring-2 focus:ring-[#00D2FF]/40 focus:border-[#00D2FF] cursor-pointer"
                         >
                           {shops.map((s) => (
-                            <option key={s.id} value={s.slug}>
+                            <option key={s.id} value={s.slug} className="bg-[#070B14] text-white">
                               {s.name}
                               {s.address ? ` — ${s.address}` : ''}
                             </option>
@@ -393,7 +356,7 @@ export const LandingHome: React.FC = () => {
                     >
                       <Link
                         to={`/s/${selectedSlug}`}
-                        className="flex items-center justify-between p-3.5 sm:p-4 rounded-xl border border-[#245BDB] bg-[#245BDB] text-white font-bold text-sm shadow-lg shadow-[#245BDB]/25 hover:bg-[#1B48B3] transition-colors"
+                        className="flex items-center justify-between p-3.5 sm:p-4 rounded-xl bg-[#245BDB] text-white font-bold text-sm shadow-lg shadow-[#245BDB]/25 hover:bg-[#1B48B3] transition-colors"
                       >
                         <div className="flex items-center space-x-2.5">
                           <Store className="w-4 h-4 shrink-0" />
@@ -410,7 +373,7 @@ export const LandingHome: React.FC = () => {
                     >
                       <Link
                         to="/owner/shop"
-                        className="flex items-center justify-between p-3.5 sm:p-4 rounded-xl border border-white/15 bg-[#070B14] text-white font-bold text-sm hover:border-[#00D2FF]/60 transition-colors"
+                        className="flex items-center justify-between p-3.5 sm:p-4 rounded-xl border border-white/15 bg-white/[0.03] text-white font-bold text-sm hover:border-[#00D2FF]/60 transition-colors"
                       >
                         <div className="flex items-center space-x-2.5">
                           <LogIn className="w-4 h-4 text-[#00D2FF] shrink-0" />
@@ -421,154 +384,182 @@ export const LandingHome: React.FC = () => {
                     </motion.div>
                   </div>
 
-                  <div className="pt-3 border-t border-white/10 flex flex-wrap items-center justify-between gap-3">
-                    <div className="flex flex-wrap items-center gap-2.5">
-                      <Link
-                        to="/login"
-                        className="inline-flex items-center space-x-1.5 px-3.5 py-2 rounded-lg border border-white/15 bg-[#070B14] hover:border-white/35 text-slate-100 font-semibold text-xs transition-colors"
-                      >
-                        <LogIn className="w-3.5 h-3.5 text-[#00D2FF]" />
-                        <span>{t('common:owner_login')}</span>
-                      </Link>
-                      <Link
-                        to="/register"
-                        className="inline-flex items-center space-x-1.5 px-3.5 py-2 rounded-lg border border-white/15 bg-[#070B14] hover:border-white/35 text-slate-100 font-semibold text-xs transition-colors"
-                      >
-                        <UserPlus className="w-3.5 h-3.5 text-emerald-400" />
-                        <span>{t('common:register_new_shop')}</span>
-                      </Link>
-                    </div>
-                    <span className="text-[11px] font-mono text-slate-400 hidden sm:inline">
-                      {t('landing:scroll_hint')}
-                    </span>
+                  <div className="pt-1 flex flex-wrap items-center gap-3">
+                    <Link
+                      to="/login"
+                      className="inline-flex items-center space-x-1.5 px-3.5 py-2 rounded-lg border border-white/15 bg-white/[0.03] hover:border-white/35 text-slate-200 font-semibold text-xs transition-colors"
+                    >
+                      <LogIn className="w-3.5 h-3.5 text-[#00D2FF]" />
+                      <span>{t('common:owner_login')}</span>
+                    </Link>
+                    <Link
+                      to="/register"
+                      className="inline-flex items-center space-x-1.5 px-3.5 py-2 rounded-lg border border-white/15 bg-white/[0.03] hover:border-white/35 text-slate-200 font-semibold text-xs transition-colors"
+                    >
+                      <UserPlus className="w-3.5 h-3.5 text-emerald-400" />
+                      <span>{t('common:register_new_shop')}</span>
+                    </Link>
                   </div>
                 </div>
               </section>
 
-              {/* Chapter I: Zero-App QR Counter Intake & Security Shield */}
-              <section
-                id="chapter-1"
-                ref={chapter1Ref}
-                className="lg:min-h-[76vh] flex items-center py-4 lg:py-16"
-              >
-                <div className="w-full rounded-3xl border border-white/10 bg-[#0C1427] p-6 sm:p-8 space-y-5 shadow-md">
-                  <div className="flex items-center justify-between">
-                    <span className="font-mono text-xs font-bold uppercase tracking-widest text-[#00D2FF]">
-                      {t('landing:ch1_step')}
-                    </span>
-                    <div className="p-2.5 rounded-xl bg-[#00D2FF]/15 text-[#00D2FF]">
-                      <QrCode className="w-5 h-5" />
-                    </div>
-                  </div>
-                  <h3 className="font-display text-2xl sm:text-3xl font-bold text-white tracking-tight">
-                    {t('landing:ch1_title')}
-                  </h3>
-                  <p className="text-sm sm:text-base text-slate-300 leading-relaxed">
-                    {t('landing:ch1_desc')}
-                  </p>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
-                    <div className="flex items-center gap-2.5 p-3 rounded-xl bg-[#070B14] border border-white/10 text-xs font-medium text-slate-200">
-                      <ShieldCheck className="w-4 h-4 text-emerald-400 shrink-0" />
-                      <span>{t('landing:ch1_point_1')}</span>
-                    </div>
-                    <div className="flex items-center gap-2.5 p-3 rounded-xl bg-[#070B14] border border-white/10 text-xs font-medium text-slate-200">
-                      <CheckCircle2 className="w-4 h-4 text-[#00D2FF] shrink-0" />
-                      <span>{t('landing:ch1_point_2')}</span>
-                    </div>
-                  </div>
-                </div>
-              </section>
-
-              {/* Chapter II: Zero-Float Poisha Math & Interactive 3D Sheet Control */}
-              <section
-                id="chapter-2"
-                ref={chapter2Ref}
-                className="lg:min-h-[76vh] flex items-center py-4 lg:py-16"
-              >
-                <div className="w-full rounded-3xl border border-white/10 bg-[#0C1427] p-6 sm:p-8 space-y-5 shadow-md">
-                  <div className="flex items-center justify-between">
-                    <span className="font-mono text-xs font-bold uppercase tracking-widest text-emerald-400">
-                      {t('landing:ch2_step')}
-                    </span>
-                    <div className="p-2.5 rounded-xl bg-emerald-500/15 text-emerald-400">
-                      <Layers className="w-5 h-5" />
-                    </div>
-                  </div>
-                  <h3 className="font-display text-2xl sm:text-3xl font-bold text-white tracking-tight">
-                    {t('landing:ch2_title')}
-                  </h3>
-                  <p className="text-sm sm:text-base text-slate-300 leading-relaxed">
-                    {t('landing:ch2_desc')}
-                  </p>
-
-                  {/* Interactive 3D Preview Simulator Box */}
-                  <div className="p-4 rounded-2xl bg-[#070B14] border border-white/10 space-y-3">
-                    <div className="flex items-center justify-between gap-2">
-                      <span className="text-xs font-semibold text-slate-300">
-                        {t('landing:ch2_toggle_label')}
+              {/* Borderless Open-Air Scroll Story Chapters with Illuminated 2px Vertical Timeline Spine */}
+              <div className="relative pl-6 sm:pl-8 border-l-2 border-white/10 space-y-16 lg:space-y-0 pb-16 lg:pb-24">
+                {/* Chapter I: Zero-App QR Counter Intake & Security Shield */}
+                <section
+                  id="chapter-1"
+                  ref={chapter1Ref}
+                  data-chapter-active={activeChapter === 1}
+                  className="relative lg:min-h-[72vh] flex items-center py-6 lg:py-16"
+                >
+                  <span
+                    className={`absolute -left-[27px] sm:-left-[35px] w-2.5 h-2.5 rounded-full transition-all duration-500 ${
+                      activeChapter === 1
+                        ? 'bg-[#00D2FF] ring-4 ring-[#00D2FF]/25 scale-125'
+                        : 'bg-white/20'
+                    }`}
+                  />
+                  <div
+                    className={`w-full space-y-5 transition-opacity duration-500 ${
+                      activeChapter === 1 ? 'opacity-100' : 'opacity-65 lg:opacity-55 hover:opacity-100'
+                    }`}
+                  >
+                    <div className="flex items-center gap-3">
+                      <span className="font-mono text-xs font-bold uppercase tracking-widest text-[#00D2FF]">
+                        {t('landing:ch1_step')}
                       </span>
-                      <span className="font-mono text-sm font-bold text-[#00D2FF]">
-                        {formatMoney(sampleEstimatePoisha, locale)}
-                      </span>
+                      <QrCode className="w-4 h-4 text-[#00D2FF]" />
                     </div>
-
-                    <div className="grid grid-cols-2 gap-2">
-                      <button
-                        type="button"
-                        onClick={() => setColorMode((v) => !v)}
-                        className="px-3 py-2 rounded-xl border border-white/15 bg-[#0C1427] hover:border-[#00D2FF]/60 text-xs font-semibold text-white transition-colors"
-                      >
-                        {colorMode ? t('landing:ch2_color') : t('landing:ch2_bw')}
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setDuplexMode((v) => !v)}
-                        className="px-3 py-2 rounded-xl border border-white/15 bg-[#0C1427] hover:border-emerald-400/60 text-xs font-semibold text-white transition-colors"
-                      >
-                        {duplexMode ? t('landing:ch2_duplex') : t('landing:ch2_simplex')}
-                      </button>
-                    </div>
-
-                    <p className="text-[11px] font-mono text-slate-400">
-                      {t('landing:ch2_sample_rate')}
+                    <h3 className="font-display text-2xl sm:text-4xl font-bold text-white tracking-tight leading-tight">
+                      {t('landing:ch1_title')}
+                    </h3>
+                    <p className="text-sm sm:text-base text-slate-300 leading-relaxed max-w-xl">
+                      {t('landing:ch1_desc')}
                     </p>
+                    <div className="flex flex-wrap gap-3 pt-1">
+                      <div className="inline-flex items-center gap-2 px-3.5 py-2 rounded-full bg-white/[0.04] border border-white/10 text-xs font-medium text-slate-200">
+                        <ShieldCheck className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                        <span>{t('landing:ch1_point_1')}</span>
+                      </div>
+                      <div className="inline-flex items-center gap-2 px-3.5 py-2 rounded-full bg-white/[0.04] border border-white/10 text-xs font-medium text-slate-200">
+                        <CheckCircle2 className="w-3.5 h-3.5 text-[#00D2FF] shrink-0" />
+                        <span>{t('landing:ch1_point_2')}</span>
+                      </div>
+                    </div>
                   </div>
-                </div>
-              </section>
+                </section>
 
-              {/* Chapter III: Autonomous Win32 Printing & Ephemeral Zero-Trace Shred */}
-              <section
-                id="chapter-3"
-                ref={chapter3Ref}
-                className="lg:min-h-[76vh] flex items-center py-4 pb-16 lg:py-16 lg:pb-24"
-              >
-                <div className="w-full rounded-3xl border border-white/10 bg-[#0C1427] p-6 sm:p-8 space-y-5 shadow-md">
-                  <div className="flex items-center justify-between">
-                    <span className="font-mono text-xs font-bold uppercase tracking-widest text-blue-400">
-                      {t('landing:ch3_step')}
-                    </span>
-                    <div className="p-2.5 rounded-xl bg-[#245BDB]/20 text-blue-300">
-                      <Printer className="w-5 h-5" />
+                {/* Chapter II: Zero-Float Poisha Math & Interactive 3D Sheet Control */}
+                <section
+                  id="chapter-2"
+                  ref={chapter2Ref}
+                  data-chapter-active={activeChapter === 2}
+                  className="relative lg:min-h-[72vh] flex items-center py-6 lg:py-16"
+                >
+                  <span
+                    className={`absolute -left-[27px] sm:-left-[35px] w-2.5 h-2.5 rounded-full transition-all duration-500 ${
+                      activeChapter === 2
+                        ? 'bg-emerald-400 ring-4 ring-emerald-400/25 scale-125'
+                        : 'bg-white/20'
+                    }`}
+                  />
+                  <div
+                    className={`w-full space-y-5 transition-opacity duration-500 ${
+                      activeChapter === 2 ? 'opacity-100' : 'opacity-65 lg:opacity-55 hover:opacity-100'
+                    }`}
+                  >
+                    <div className="flex items-center gap-3">
+                      <span className="font-mono text-xs font-bold uppercase tracking-widest text-emerald-400">
+                        {t('landing:ch2_step')}
+                      </span>
+                      <Layers className="w-4 h-4 text-emerald-400" />
+                    </div>
+                    <h3 className="font-display text-2xl sm:text-4xl font-bold text-white tracking-tight leading-tight">
+                      {t('landing:ch2_title')}
+                    </h3>
+                    <p className="text-sm sm:text-base text-slate-300 leading-relaxed max-w-xl">
+                      {t('landing:ch2_desc')}
+                    </p>
+
+                    {/* Sleek Open Interactive 3D Sheet Strip */}
+                    <div className="pt-2 space-y-3 max-w-md">
+                      <div className="flex items-center justify-between gap-2 text-xs">
+                        <span className="font-semibold text-slate-400">
+                          {t('landing:ch2_toggle_label')}
+                        </span>
+                        <span className="font-mono text-base font-bold text-[#00D2FF]">
+                          {formatMoney(sampleEstimatePoisha, locale)}
+                        </span>
+                      </div>
+
+                      <div className="flex flex-wrap gap-2">
+                        <button
+                          type="button"
+                          onClick={() => setColorMode((v) => !v)}
+                          className="px-4 py-2 rounded-full border border-white/15 bg-white/[0.04] hover:border-[#00D2FF]/60 text-xs font-semibold text-white transition-colors"
+                        >
+                          {colorMode ? t('landing:ch2_color') : t('landing:ch2_bw')}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setDuplexMode((v) => !v)}
+                          className="px-4 py-2 rounded-full border border-white/15 bg-white/[0.04] hover:border-emerald-400/60 text-xs font-semibold text-white transition-colors"
+                        >
+                          {duplexMode ? t('landing:ch2_duplex') : t('landing:ch2_simplex')}
+                        </button>
+                      </div>
+
+                      <p className="text-[11px] font-mono text-slate-500">
+                        {t('landing:ch2_sample_rate')}
+                      </p>
                     </div>
                   </div>
-                  <h3 className="font-display text-2xl sm:text-3xl font-bold text-white tracking-tight">
-                    {t('landing:ch3_title')}
-                  </h3>
-                  <p className="text-sm sm:text-base text-slate-300 leading-relaxed">
-                    {t('landing:ch3_desc')}
-                  </p>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
-                    <div className="flex items-center gap-2.5 p-3 rounded-xl bg-[#070B14] border border-white/10 text-xs font-medium text-slate-200">
-                      <Printer className="w-4 h-4 text-blue-400 shrink-0" />
-                      <span>{t('landing:ch3_point_1')}</span>
+                </section>
+
+                {/* Chapter III: Autonomous Win32 Printing & Ephemeral Zero-Trace Shred */}
+                <section
+                  id="chapter-3"
+                  ref={chapter3Ref}
+                  data-chapter-active={activeChapter === 3}
+                  className="relative lg:min-h-[72vh] flex items-center py-6 lg:py-16"
+                >
+                  <span
+                    className={`absolute -left-[27px] sm:-left-[35px] w-2.5 h-2.5 rounded-full transition-all duration-500 ${
+                      activeChapter === 3
+                        ? 'bg-blue-400 ring-4 ring-blue-400/25 scale-125'
+                        : 'bg-white/20'
+                    }`}
+                  />
+                  <div
+                    className={`w-full space-y-5 transition-opacity duration-500 ${
+                      activeChapter === 3 ? 'opacity-100' : 'opacity-65 lg:opacity-55 hover:opacity-100'
+                    }`}
+                  >
+                    <div className="flex items-center gap-3">
+                      <span className="font-mono text-xs font-bold uppercase tracking-widest text-blue-400">
+                        {t('landing:ch3_step')}
+                      </span>
+                      <Printer className="w-4 h-4 text-blue-400" />
                     </div>
-                    <div className="flex items-center gap-2.5 p-3 rounded-xl bg-[#070B14] border border-white/10 text-xs font-medium text-slate-200">
-                      <Flame className="w-4 h-4 text-emerald-400 shrink-0" />
-                      <span>{t('landing:ch3_point_2')}</span>
+                    <h3 className="font-display text-2xl sm:text-4xl font-bold text-white tracking-tight leading-tight">
+                      {t('landing:ch3_title')}
+                    </h3>
+                    <p className="text-sm sm:text-base text-slate-300 leading-relaxed max-w-xl">
+                      {t('landing:ch3_desc')}
+                    </p>
+                    <div className="flex flex-wrap gap-3 pt-1">
+                      <div className="inline-flex items-center gap-2 px-3.5 py-2 rounded-full bg-white/[0.04] border border-white/10 text-xs font-medium text-slate-200">
+                        <Printer className="w-3.5 h-3.5 text-blue-400 shrink-0" />
+                        <span>{t('landing:ch3_point_1')}</span>
+                      </div>
+                      <div className="inline-flex items-center gap-2 px-3.5 py-2 rounded-full bg-white/[0.04] border border-white/10 text-xs font-medium text-slate-200">
+                        <Flame className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                        <span>{t('landing:ch3_point_2')}</span>
+                      </div>
                     </div>
                   </div>
-                </div>
-              </section>
+                </section>
+              </div>
             </div>
           </div>
         </div>

@@ -81,7 +81,7 @@ describe('3D Storytelling LandingPage & Hero', () => {
     expect(screen.queryByText(/landing\./i)).not.toBeInTheDocument();
   });
 
-  it('switches stage telemetry label when clicking discrete chapter pills', async () => {
+  it('renders clean borderless 3D stage without debug chrome and focuses nav chapter jump cleanly', async () => {
     render(
       <MemoryRouter>
         <LandingHome />
@@ -90,9 +90,12 @@ describe('3D Storytelling LandingPage & Hero', () => {
 
     await screen.findByLabelText(/Select Print Shop/i);
 
-    fireEvent.click(screen.getByRole('button', { name: 'Stage 02' }));
-    expect(screen.getByText(/Duplex Poisha Engine • Live Sheet Split/i)).toBeInTheDocument();
-    fireEvent.click(screen.getByRole('button', { name: 'Stage 03' }));
-    expect(screen.getByText(/PrintFlow Agent • Win32 Spooler & Shred/i)).toBeInTheDocument();
+    expect(screen.queryByText(/Move cursor or scroll/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/3D Interactive Stage/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/Scroll to explore the autonomous pipeline/i)).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Poisha Math' }));
+    const ch2 = document.getElementById('chapter-2');
+    expect(ch2).toHaveAttribute('data-chapter-active', 'true');
   });
 });
