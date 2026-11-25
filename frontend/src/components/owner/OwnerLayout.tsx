@@ -18,6 +18,7 @@ import {
   PanelLeftOpen,
 } from 'lucide-react';
 import { Logo } from '../common/Logo';
+import { DevCenterPointBadge } from '../common/DevCenterPointBadge';
 import { usePageTitle } from '../../hooks/usePageTitle';
 import { getAuthToken, removeAuthToken, apiRequest } from '../../lib/api';
 
@@ -231,17 +232,13 @@ export const OwnerLayout: React.FC = () => {
             {!sidebarCollapsed && <span>{t('auth:logout')}</span>}
           </button>
 
-          {!sidebarCollapsed && (
-            <div className="pt-1 text-center text-[10px] text-muted">
-              <span>PrintFlow by </span>
-              <a
-                href="https://devcenterpoint.com"
-                target="_blank"
-                rel="noreferrer"
-                className="font-semibold text-accent hover:underline"
-              >
-                DevCenterPoint
-              </a>
+          {sidebarCollapsed ? (
+            <div className="pt-1 flex justify-center">
+              <DevCenterPointBadge variant="icon" />
+            </div>
+          ) : (
+            <div className="pt-1 flex justify-center">
+              <DevCenterPointBadge variant="sidebar" />
             </div>
           )}
         </div>
@@ -366,9 +363,9 @@ export const OwnerLayout: React.FC = () => {
                   <span>{t('auth:logout')}</span>
                 </button>
 
-                <p className="text-center text-[10px] text-muted">
-                  {t('common:footer_copyright')}
-                </p>
+                <div className="flex justify-center pt-1">
+                  <DevCenterPointBadge variant="sidebar" />
+                </div>
               </div>
             </aside>
           </div>
@@ -379,8 +376,8 @@ export const OwnerLayout: React.FC = () => {
           <div className="min-w-0">
             <Outlet />
           </div>
-          <footer className="pt-4 border-t border-border/60 text-center text-xs text-muted">
-            <p>{t('common:footer_copyright')}</p>
+          <footer className="pt-4 border-t border-border/60 text-center">
+            <DevCenterPointBadge variant="footer" />
           </footer>
         </main>
       </div>

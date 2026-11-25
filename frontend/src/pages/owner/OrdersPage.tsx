@@ -151,8 +151,70 @@ export const OrdersPage: React.FC = () => {
             No matching orders found.
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse text-xs">
+          <>
+            {/* Mobile Card View (< md) */}
+            <div className="md:hidden divide-y divide-border">
+              {orders.map((o) => (
+                <div key={o.id} className="p-4 space-y-3">
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="min-w-0">
+                      <p className="font-mono font-bold text-sm text-ink truncate">
+                        {o.reference || o.public_reference}
+                      </p>
+                      <p className="font-mono text-xs text-muted flex items-center space-x-1 mt-0.5">
+                        <Phone className="w-3 h-3 shrink-0 text-muted/70" />
+                        <span>{o.customer_phone_masked || o.customer_phone}</span>
+                      </p>
+                    </div>
+                    <div className="text-right shrink-0 space-y-1">
+                      {getStatusBadge(o.status)}
+                      <p className="font-bold text-sm text-ink">
+                        {formatMoney(o.total_minor ?? o.total_poisha ?? 0)}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center justify-between text-[11px] text-muted">
+                    <span>{o.created_at ? new Date(o.created_at).toLocaleDateString() : 'N/A'}</span>
+                  </div>
+
+                  <div className="flex flex-wrap gap-2 pt-1">
+                    <button
+                      onClick={() => {
+                        setSelectedOrderId(o.id);
+                        setDetailModalOpen(true);
+                      }}
+                      className="flex-1 min-w-[80px] inline-flex items-center justify-center space-x-1 px-3 py-2 rounded-lg border border-border bg-surface hover:bg-paper text-ink text-xs font-medium transition-colors"
+                    >
+                      <Eye className="w-3.5 h-3.5 text-muted" />
+                      <span>View</span>
+                    </button>
+
+                    {['READY', 'PRINTED', 'printer_confirmed', 'paid', 'completed'].includes(o.status) && o.status !== 'COLLECTED' && (
+                      <button
+                        onClick={() => handleHandover(o.id)}
+                        className="flex-1 min-w-[90px] inline-flex items-center justify-center space-x-1 px-3 py-2 rounded-lg border border-border bg-surface hover:bg-status-success/10 text-status-success text-xs font-medium transition-colors"
+                      >
+                        <Hand className="w-3.5 h-3.5" />
+                        <span>Handover</span>
+                      </button>
+                    )}
+
+                    <button
+                      onClick={() => setReprintOrder({ id: o.id, ref: o.reference || o.public_reference })}
+                      className="flex-1 min-w-[85px] inline-flex items-center justify-center space-x-1 px-3 py-2 rounded-lg border border-border bg-surface hover:bg-paper text-status-warning text-xs font-medium transition-colors"
+                    >
+                      <RotateCcw className="w-3.5 h-3.5" />
+                      <span>Reprint</span>
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Desktop Table View (md+) */}
+            <div className="hidden md:block overflow-x-auto">
+              <table className="w-full text-left border-collapse text-xs">
               <thead>
                 <tr className="border-b border-border bg-paper/60 text-muted font-semibold">
                   <th className="py-3.5 px-4">Order Ref</th>
@@ -227,6 +289,7 @@ export const OrdersPage: React.FC = () => {
               </tbody>
             </table>
           </div>
+          </>
         )}
 
         {/* Pagination */}

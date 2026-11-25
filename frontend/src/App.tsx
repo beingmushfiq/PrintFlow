@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route, Link, Navigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Globe, ArrowRight, Store, LogIn, UserPlus, ChevronDown } from 'lucide-react';
 import { Logo } from './components/common/Logo';
+import { DevCenterPointBadge } from './components/common/DevCenterPointBadge';
 import { usePageTitle } from './hooks/usePageTitle';
 import { apiRequest } from './lib/api';
 import { StorefrontPage } from './pages/customer/StorefrontPage';
@@ -166,8 +167,8 @@ export const LandingHome: React.FC = () => {
       </main>
 
       {/* Footer */}
-      <footer className="border-t border-border bg-surface px-6 py-4 text-center text-xs text-muted">
-        <p>{t('common:footer_copyright')}</p>
+      <footer className="border-t border-border bg-surface px-6 py-4 text-center">
+        <DevCenterPointBadge variant="footer" />
       </footer>
     </div>
   );

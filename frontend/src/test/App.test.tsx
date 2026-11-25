@@ -15,7 +15,8 @@ describe('App Component', () => {
     expect(screen.queryByText(/\/s\/printflow-main/i)).not.toBeInTheDocument();
     expect(screen.getByRole('link', { name: /Owner Login/i })).toBeInTheDocument();
     expect(screen.getByRole('link', { name: /Register New Shop/i })).toBeInTheDocument();
-    expect(screen.getByText(/© 2026 PrintFlow by DevCenterPoint/i)).toBeInTheDocument();
+    expect(screen.getByText(/© 2026 PrintFlow by/i)).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /DevCenterPoint/i })).toHaveAttribute('href', 'https://devcenterpoint.com');
     expect(screen.queryByText(/Milestone 1/i)).not.toBeInTheDocument();
   });
 

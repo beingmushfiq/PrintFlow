@@ -13,6 +13,7 @@ import {
   ArrowLeft,
 } from 'lucide-react';
 import { Logo } from '../../components/common/Logo';
+import { DevCenterPointBadge } from '../../components/common/DevCenterPointBadge';
 import { usePageTitle } from '../../hooks/usePageTitle';
 import { PhoneIntake } from '../../components/PhoneIntake';
 import { FileUploadDropzone } from '../../components/FileUploadDropzone';
@@ -190,7 +191,7 @@ export const StorefrontPage: React.FC = () => {
               <span className="text-xs font-semibold uppercase tracking-wider text-accent block leading-none">
                 {t('storefront:counter_label')}
               </span>
-              <h1 className="text-base font-bold text-ink leading-tight truncate max-w-[180px] sm:max-w-xs">
+              <h1 className="text-base font-bold text-ink leading-tight truncate max-w-[140px] sm:max-w-xs">
                 {shop.name}
               </h1>
             </div>
@@ -451,8 +452,8 @@ export const StorefrontPage: React.FC = () => {
       </main>
 
       {/* Footer */}
-      <footer className="py-4 text-center text-xs text-muted border-t border-border bg-surface">
-        <p>{t('common:footer_copyright')}</p>
+      <footer className="py-4 px-4 text-center border-t border-border bg-surface">
+        <DevCenterPointBadge variant="footer" />
       </footer>
     </div>
   );

@@ -13,6 +13,7 @@ import {
   RefreshCw,
 } from 'lucide-react';
 import { Logo } from '../../components/common/Logo';
+import { DevCenterPointBadge } from '../../components/common/DevCenterPointBadge';
 import { usePageTitle } from '../../hooks/usePageTitle';
 import { apiRequest } from '../../lib/api';
 
@@ -216,6 +217,10 @@ export const OrderStatusPage: React.FC = () => {
             <span>{t('order_status.view_receipt')}</span>
           </Link>
           <p className="text-xs text-slate-400 mt-3">{t('order_status.reprint_disclaimer')}</p>
+        </div>
+
+        <div className="pt-4 text-center">
+          <DevCenterPointBadge variant="footer" />
         </div>
       </div>
     </div>

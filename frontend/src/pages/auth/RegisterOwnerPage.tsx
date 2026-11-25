@@ -3,6 +3,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Lock, Mail, User, Store, Loader2, AlertCircle } from 'lucide-react';
 import { Logo } from '../../components/common/Logo';
+import { DevCenterPointBadge } from '../../components/common/DevCenterPointBadge';
 import { usePageTitle } from '../../hooks/usePageTitle';
 import { PhoneIntake } from '../../components/PhoneIntake';
 import { apiRequest, setAuthToken } from '../../lib/api';
@@ -205,9 +206,9 @@ export const RegisterOwnerPage: React.FC = () => {
           </div>
         </div>
 
-        <p className="mt-6 text-center text-xs text-muted">
-          &copy; 2026 PrintFlow by DevCenterPoint
-        </p>
+        <div className="mt-6 text-center">
+          <DevCenterPointBadge variant="footer" />
+        </div>
       </div>
     </div>
   );

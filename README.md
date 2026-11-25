@@ -450,10 +450,10 @@ PrintFlow is proprietary commercial software built by **DevCenterPoint**. Unauth
 
 <p align="center">
   <a href="https://devcenterpoint.com">
-    <strong>DevCenterPoint</strong>
+    <img src="docs/assets/devcenterpoint-logo.png" alt="DevCenterPoint — Code. Build. Deploy. Scale." width="140" />
   </a>
   <br />
-  <em>Business Automation · Custom Software · Intelligent Systems</em>
+  <em>Code. Build. Deploy. Scale. • Business Automation &amp; Intelligent Systems</em>
   <br />
   🌐 <a href="https://devcenterpoint.com">https://devcenterpoint.com</a>
 </p>

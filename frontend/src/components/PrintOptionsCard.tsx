@@ -107,7 +107,7 @@ export const PrintOptionsCard: React.FC<PrintOptionsCardProps> = ({
           </div>
           <span className="text-xs text-indigo-600 font-medium">{t('quote:duplex_rule_note')}</span>
         </div>
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <button
             type="button"
             disabled={disabled}
@@ -143,7 +143,7 @@ export const PrintOptionsCard: React.FC<PrintOptionsCardProps> = ({
           <Palette className="w-4 h-4 text-slate-500" />
           <label className="text-sm font-medium text-slate-700">{t('quote:color_mode')}</label>
         </div>
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <button
             type="button"
             disabled={disabled}
@@ -181,7 +181,7 @@ export const PrintOptionsCard: React.FC<PrintOptionsCardProps> = ({
           <FileText className="w-4 h-4 text-slate-500" />
           <label className="text-sm font-medium text-slate-700">{t('quote:paper_size')}</label>
         </div>
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <button
             type="button"
             disabled={disabled}

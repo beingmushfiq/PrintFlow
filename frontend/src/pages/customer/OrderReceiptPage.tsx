@@ -3,6 +3,7 @@ import { useParams, Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Printer, ArrowLeft, AlertCircle, CheckCircle } from 'lucide-react';
 import { Logo } from '../../components/common/Logo';
+import { DevCenterPointBadge } from '../../components/common/DevCenterPointBadge';
 import { usePageTitle } from '../../hooks/usePageTitle';
 import { formatMoney } from '../../lib/money';
 import { apiRequest } from '../../lib/api';
@@ -253,8 +254,8 @@ export const OrderReceiptPage: React.FC = () => {
         </div>
 
         {/* Footer */}
-        <div className="text-center text-[10px] text-slate-400 border-t border-slate-100 pt-3">
-          PrintFlow by DevCenterPoint · Autonomous Walk-in Print Shop Automation
+        <div className="text-center border-t border-slate-100 pt-3">
+          <DevCenterPointBadge variant="footer" />
         </div>
       </div>
     </div>
