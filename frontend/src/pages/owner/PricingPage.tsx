@@ -16,6 +16,9 @@ export const PricingPage: React.FC = () => {
   const [duplexModel, setDuplexModel] = useState<string>('model_b');
   const [duplexDiscount, setDuplexDiscount] = useState<number>(20);
   const [flatSheetFee, setFlatSheetFee] = useState<number>(350);
+  const [colorRate, setColorRate] = useState<number>(1000);
+  const [colorDuplexDiscount, setColorDuplexDiscount] = useState<number>(10);
+  const [colorFlatSheetFee, setColorFlatSheetFee] = useState<number>(1800);
   const [minOrderFloor, setMinOrderFloor] = useState<number>(500);
   const [vatBasisPoints, setVatBasisPoints] = useState<number>(500);
 
@@ -23,6 +26,7 @@ export const PricingPage: React.FC = () => {
   const [samplePages, setSamplePages] = useState<number>(5);
   const [sampleCopies, setSampleCopies] = useState<number>(1);
   const [sampleDuplex, setSampleDuplex] = useState<boolean>(true);
+  const [sampleColorMode, setSampleColorMode] = useState<'mono' | 'color'>('mono');
 
   const [saving, setSaving] = useState<boolean>(false);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
@@ -36,6 +40,9 @@ export const PricingPage: React.FC = () => {
         setDuplexModel(res.data.duplex_model ?? 'model_b');
         setDuplexDiscount(res.data.duplex_discount_percent ?? 20);
         setFlatSheetFee(res.data.flat_duplex_sheet_poisha ?? 350);
+        setColorRate(res.data.color_simplex_poisha ?? 1000);
+        setColorDuplexDiscount(res.data.color_duplex_discount_percent ?? 10);
+        setColorFlatSheetFee(res.data.color_flat_duplex_sheet_poisha ?? 1800);
         setMinOrderFloor(res.data.minimum_order_floor_poisha ?? 500);
         setVatBasisPoints(res.data.vat_basis_points ?? 500);
       }
@@ -50,12 +57,12 @@ export const PricingPage: React.FC = () => {
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (baseRate <= 0) {
-      setErrorMsg('Base rate must be positive');
+    if (baseRate <= 0 || colorRate <= 0) {
+      setErrorMsg('Base rates must be positive');
       return;
     }
-    if (duplexDiscount < 0 || duplexDiscount > 100) {
-      setErrorMsg('Discount must be between 0% and 100%');
+    if (duplexDiscount < 0 || duplexDiscount > 100 || colorDuplexDiscount < 0 || colorDuplexDiscount > 100) {
+      setErrorMsg('Discounts must be between 0% and 100%');
       return;
     }
 
@@ -71,6 +78,9 @@ export const PricingPage: React.FC = () => {
           duplex_model: duplexModel,
           duplex_discount_percent: duplexDiscount,
           flat_duplex_sheet_poisha: flatSheetFee,
+          color_simplex_poisha: colorRate,
+          color_duplex_discount_percent: colorDuplexDiscount,
+          color_flat_duplex_sheet_poisha: colorFlatSheetFee,
           minimum_order_floor_poisha: minOrderFloor,
           vat_basis_points: vatBasisPoints,
         }),
@@ -88,11 +98,14 @@ export const PricingPage: React.FC = () => {
   const calculatePreview = () => {
     const pages = Math.max(1, samplePages);
     const copies = Math.max(1, sampleCopies);
+    const activeBase = sampleColorMode === 'color' ? colorRate : baseRate;
+    const activeDiscount = sampleColorMode === 'color' ? colorDuplexDiscount : duplexDiscount;
+    const activeFlatSheet = sampleColorMode === 'color' ? colorFlatSheetFee : flatSheetFee;
 
     if (!sampleDuplex) {
       const totalSheets = pages * copies;
       const totalSides = pages * copies;
-      const subtotalPoisha = baseRate * totalSides;
+      const subtotalPoisha = activeBase * totalSides;
       return { totalSheets, totalSides, subtotalPoisha, frontSides: totalSides, backSides: 0 };
     }
 
@@ -104,10 +117,10 @@ export const PricingPage: React.FC = () => {
     let costPerCopy = 0;
     if (duplexModel === 'model_a') {
       const oddSheet = pages % 2 === 1 ? 1 : 0;
-      costPerCopy = (backSides * flatSheetFee) + (oddSheet * baseRate);
+      costPerCopy = (backSides * activeFlatSheet) + (oddSheet * activeBase);
     } else {
-      const discountedRate = Math.round(baseRate * (1 - duplexDiscount / 100));
-      costPerCopy = (frontSides * baseRate) + (backSides * discountedRate);
+      const discountedRate = Math.round(activeBase * (1 - activeDiscount / 100));
+      costPerCopy = (frontSides * activeBase) + (backSides * discountedRate);
     }
 
     const subtotalPoisha = costPerCopy * copies;
@@ -242,6 +255,70 @@ export const PricingPage: React.FC = () => {
               </div>
             )}
 
+            {/* Color Print Rates */}
+            <div className="space-y-4 pt-3 border-t border-border">
+              <h3 className="font-bold text-sm text-ink">Color Print Rates</h3>
+
+              <div className="space-y-1.5">
+                <label className="block text-xs font-semibold text-ink">
+                  {t('owner:color_simplex')} (in Poisha)
+                </label>
+                <div className="flex items-center space-x-3">
+                  <input
+                    type="number"
+                    min="1"
+                    step="1"
+                    value={colorRate}
+                    onChange={(e) => setColorRate(parseInt(e.target.value) || 0)}
+                    className="w-full px-3 py-2 text-sm rounded-xl border border-border bg-paper focus:bg-surface focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent"
+                  />
+                  <span className="shrink-0 text-sm font-bold text-ink w-24">
+                    {formatMoney(colorRate)}
+                  </span>
+                </div>
+                <p className="text-[11px] text-muted">Standard rate charged for one color printed side (100 Poisha = ৳ 1.00)</p>
+              </div>
+
+              {duplexModel === 'model_b' ? (
+                <div className="space-y-1.5">
+                  <label className="block text-xs font-semibold text-ink">
+                    {t('owner:color_duplex_discount')}
+                  </label>
+                  <div className="flex items-center space-x-3">
+                    <input
+                      type="number"
+                      min="0"
+                      max="100"
+                      value={colorDuplexDiscount}
+                      onChange={(e) => setColorDuplexDiscount(parseInt(e.target.value) || 0)}
+                      className="w-full px-3 py-2 text-sm rounded-xl border border-border bg-paper focus:bg-surface focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent"
+                    />
+                    <span className="shrink-0 text-sm font-bold text-ink w-24">
+                      {colorDuplexDiscount}%
+                    </span>
+                  </div>
+                </div>
+              ) : (
+                <div className="space-y-1.5">
+                  <label className="block text-xs font-semibold text-ink">
+                    {t('owner:color_flat_duplex')}
+                  </label>
+                  <div className="flex items-center space-x-3">
+                    <input
+                      type="number"
+                      min="1"
+                      value={colorFlatSheetFee}
+                      onChange={(e) => setColorFlatSheetFee(parseInt(e.target.value) || 0)}
+                      className="w-full px-3 py-2 text-sm rounded-xl border border-border bg-paper focus:bg-surface focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent"
+                    />
+                    <span className="shrink-0 text-sm font-bold text-ink w-24">
+                      {formatMoney(colorFlatSheetFee)}
+                    </span>
+                  </div>
+                </div>
+              )}
+            </div>
+
             {/* Minimum floor and VAT */}
             <div className="grid grid-cols-2 gap-4 pt-2 border-t border-border">
               <div className="space-y-1.5">
@@ -325,6 +402,30 @@ export const PricingPage: React.FC = () => {
                     className="w-24 accent-accent"
                   />
                   <span className="w-6 text-right font-bold text-ink">{sampleCopies}</span>
+                </div>
+              </div>
+
+              <div className="flex items-center justify-between text-xs">
+                <span className="text-muted font-medium">Color Mode:</span>
+                <div className="flex items-center space-x-2">
+                  <button
+                    type="button"
+                    onClick={() => setSampleColorMode('mono')}
+                    className={`px-2 py-1 rounded text-[11px] font-semibold border ${
+                      sampleColorMode === 'mono' ? 'bg-accent text-white border-accent' : 'bg-paper text-muted border-border'
+                    }`}
+                  >
+                    B&amp;W
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setSampleColorMode('color')}
+                    className={`px-2 py-1 rounded text-[11px] font-semibold border ${
+                      sampleColorMode === 'color' ? 'bg-accent text-white border-accent' : 'bg-paper text-muted border-border'
+                    }`}
+                  >
+                    Color
+                  </button>
                 </div>
               </div>
 

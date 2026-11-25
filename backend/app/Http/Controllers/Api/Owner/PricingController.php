@@ -39,6 +39,9 @@ class PricingController extends Controller
         $duplexModel = 'model_b';
         $duplexDiscountPercent = 20;
         $flatDuplexSheetPoisha = 350;
+        $colorSimplexPoisha = 1000;
+        $colorDuplexDiscountPercent = 10;
+        $colorFlatDuplexSheetPoisha = 1800;
         $minimumFloorPoisha = $profile?->minimum_order_minor ?? 500;
         $vatBasisPoints = $profile?->tax_rate_basis_points ?? 500;
 
@@ -55,6 +58,18 @@ class PricingController extends Controller
                 $duplexDiscountPercent = (int) ($ruleData['duplex_discount_percent'] ?? 20);
                 $flatDuplexSheetPoisha = (int) ($ruleData['flat_duplex_sheet_rate_minor'] ?? 350);
             }
+
+            $colorRule = PriceRule::withoutTenant()
+                ->where('price_profile_id', $profile->id)
+                ->where('color_mode', 'color')
+                ->first();
+
+            if ($colorRule) {
+                $colorSimplexPoisha = $colorRule->unit_price_minor ?: 1000;
+                $colorRuleData = is_array($colorRule->rule_json) ? $colorRule->rule_json : [];
+                $colorDuplexDiscountPercent = (int) ($colorRuleData['duplex_discount_percent'] ?? 10);
+                $colorFlatDuplexSheetPoisha = (int) ($colorRuleData['flat_duplex_sheet_rate_minor'] ?? 1800);
+            }
         }
 
         return ApiResponse::success([
@@ -62,6 +77,9 @@ class PricingController extends Controller
             'duplex_model' => $duplexModel,
             'duplex_discount_percent' => $duplexDiscountPercent,
             'flat_duplex_sheet_poisha' => $flatDuplexSheetPoisha,
+            'color_simplex_poisha' => $colorSimplexPoisha,
+            'color_duplex_discount_percent' => $colorDuplexDiscountPercent,
+            'color_flat_duplex_sheet_poisha' => $colorFlatDuplexSheetPoisha,
             'minimum_order_floor_poisha' => $minimumFloorPoisha,
             'vat_basis_points' => $vatBasisPoints,
         ]);
@@ -94,6 +112,22 @@ class PricingController extends Controller
         }
 
         $flatSheetRate = (int) $request->input('flat_duplex_sheet_poisha', 350);
+
+        $colorSimplexRate = (int) $request->input('color_simplex_poisha', 1000);
+        if ($colorSimplexRate <= 0) {
+            return ApiResponse::error([
+                'color_simplex_poisha' => 'Color base rate must be positive',
+            ], 422, [], 'VALIDATION_ERROR');
+        }
+
+        $colorDiscountPercent = (int) $request->input('color_duplex_discount_percent', 10);
+        if ($colorDiscountPercent < 0 || $colorDiscountPercent > 100) {
+            return ApiResponse::error([
+                'color_duplex_discount_percent' => 'Color discount must be 0-100%',
+            ], 422, [], 'VALIDATION_ERROR');
+        }
+
+        $colorFlatSheetRate = (int) $request->input('color_flat_duplex_sheet_poisha', 1800);
         $minimumFloor = max(0, (int) $request->input('minimum_order_floor_poisha', 500));
         $vatBasisPoints = max(0, (int) $request->input('vat_basis_points', 500));
 
@@ -141,11 +175,35 @@ class PricingController extends Controller
             ]
         );
 
+        PriceRule::withoutTenant()->updateOrCreate(
+            [
+                'tenant_id' => $shop->tenant_id,
+                'price_profile_id' => $profile->id,
+                'color_mode' => 'color',
+                'media_code' => 'paper_a4',
+            ],
+            [
+                'service_code' => 'page_print',
+                'sides_mode' => 'simplex',
+                'unit_basis' => 'printed_side',
+                'unit_price_minor' => $colorSimplexRate,
+                'is_active' => true,
+                'rule_json' => [
+                    'duplex_model' => $duplexModel,
+                    'duplex_discount_percent' => $colorDiscountPercent,
+                    'flat_duplex_sheet_rate_minor' => $colorFlatSheetRate,
+                ],
+            ]
+        );
+
         return ApiResponse::success([
             'base_simplex_poisha' => $baseRate,
             'duplex_model' => $duplexModel,
             'duplex_discount_percent' => $discountPercent,
             'flat_duplex_sheet_poisha' => $flatSheetRate,
+            'color_simplex_poisha' => $colorSimplexRate,
+            'color_duplex_discount_percent' => $colorDiscountPercent,
+            'color_flat_duplex_sheet_poisha' => $colorFlatSheetRate,
             'minimum_order_floor_poisha' => $minimumFloor,
             'vat_basis_points' => $vatBasisPoints,
             'message' => 'Pricing profile updated successfully',
@@ -154,10 +212,17 @@ class PricingController extends Controller
 
     public function preview(Request $request): JsonResponse
     {
-        $baseRate = (int) $request->input('base_simplex_poisha', 200);
-        $discount = (int) $request->input('duplex_discount_percent', 20);
+        $colorMode = (string) $request->input('color_mode', 'mono');
+        $baseRate = $colorMode === 'color'
+            ? (int) $request->input('color_simplex_poisha', 1000)
+            : (int) $request->input('base_simplex_poisha', 200);
+        $discount = $colorMode === 'color'
+            ? (int) $request->input('color_duplex_discount_percent', 10)
+            : (int) $request->input('duplex_discount_percent', 20);
         $model = (string) $request->input('duplex_model', 'model_b');
-        $flatSheetRate = (int) $request->input('flat_duplex_sheet_poisha', 350);
+        $flatSheetRate = $colorMode === 'color'
+            ? (int) $request->input('color_flat_duplex_sheet_poisha', 1800)
+            : (int) $request->input('flat_duplex_sheet_poisha', 350);
         $pages = max(1, (int) $request->input('pages', 5));
         $copies = max(1, (int) $request->input('copies', 1));
         $sidesMode = (string) $request->input('sides_mode', 'duplex');
