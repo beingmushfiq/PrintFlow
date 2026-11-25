@@ -1,7 +1,7 @@
 import React from 'react';
 import { BrowserRouter, Routes, Route, Link, Navigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Globe, ShieldCheck, ArrowRight, Store, LogIn } from 'lucide-react';
+import { Globe, ArrowRight, Store, LogIn, UserPlus } from 'lucide-react';
 import { Logo } from './components/common/Logo';
 import { usePageTitle } from './hooks/usePageTitle';
 import { StorefrontPage } from './pages/customer/StorefrontPage';
@@ -58,20 +58,6 @@ export const LandingHome: React.FC = () => {
       {/* Main Content */}
       <main className="flex-1 max-w-4xl w-full mx-auto p-6 space-y-8 flex flex-col justify-center">
         <div className="bg-surface border border-border rounded-2xl p-8 shadow-sm space-y-6 text-center max-w-2xl mx-auto">
-          <div className="flex items-center justify-between">
-            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-accent-soft text-accent">
-              Milestone 1 • Baseline System
-            </span>
-            <span className="text-xs font-bold text-ink">
-              ৳ 12.50
-            </span>
-          </div>
-
-          <div className="inline-flex items-center space-x-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-accent-soft text-accent">
-            <ShieldCheck className="w-4 h-4 text-status-success" />
-            <span>Milestone 2 • Identity &amp; Storefront Intake Ready</span>
-          </div>
-
           <h2 className="text-3xl font-extrabold text-ink tracking-tight">
             Autonomous Walk-in Print Operations
           </h2>
@@ -104,17 +90,28 @@ export const LandingHome: React.FC = () => {
             </Link>
           </div>
 
-          <div className="pt-4 flex items-center justify-center space-x-6 text-xs text-muted">
-            <Link to="/login" className="hover:text-accent font-medium">Owner Login</Link>
-            <span>•</span>
-            <Link to="/register" className="hover:text-accent font-medium">Register New Shop</Link>
+          <div className="pt-4 border-t border-border/60 flex flex-wrap items-center justify-center gap-3">
+            <Link
+              to="/login"
+              className="inline-flex items-center space-x-1.5 px-4 py-2 rounded-lg border border-border bg-paper hover:bg-surface hover:border-accent text-ink font-semibold text-xs transition-all shadow-xs"
+            >
+              <LogIn className="w-3.5 h-3.5 text-accent" />
+              <span>Owner Login</span>
+            </Link>
+            <Link
+              to="/register"
+              className="inline-flex items-center space-x-1.5 px-4 py-2 rounded-lg border border-border bg-paper hover:bg-surface hover:border-accent text-ink font-semibold text-xs transition-all shadow-xs"
+            >
+              <UserPlus className="w-3.5 h-3.5 text-accent" />
+              <span>Register New Shop</span>
+            </Link>
           </div>
         </div>
       </main>
 
       {/* Footer */}
       <footer className="border-t border-border bg-surface px-6 py-4 text-center text-xs text-muted">
-        <p>{t('common:powered_by')} • PrintFlow v1.0</p>
+        <p>&copy; 2026 PrintFlow by DevCenterPoint</p>
       </footer>
     </div>
   );
