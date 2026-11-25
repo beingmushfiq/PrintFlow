@@ -156,7 +156,7 @@ export const LandingHome: React.FC = () => {
   return (
     <div className="min-h-screen w-full max-w-full overflow-x-clip bg-[#070B14] text-white flex flex-col">
       {/* Sticky Solid Obsidian Topbar (zero backdrop-blur compositor thrash over WebGL) */}
-      <header className="sticky top-0 z-30 w-full max-w-full overflow-hidden border-b border-white/10 bg-[#070B14]/95 px-4 sm:px-6 lg:px-8 py-3.5">
+      <header className="sticky top-0 z-30 w-full max-w-full overflow-hidden border-b border-white/10 bg-[#070B14] px-4 sm:px-6 lg:px-8 py-3.5">
         <div className="max-w-7xl mx-auto flex items-center justify-between gap-3 w-full">
           <div className="flex items-center space-x-3 flex-1 min-w-0 overflow-hidden">
             <Logo variant="mark" theme="white" size="md" />
@@ -207,79 +207,96 @@ export const LandingHome: React.FC = () => {
         </div>
       </header>
 
-      {/* Main Obsidian 3D Choreography Container — pure seamless spatial field without card borders */}
+      {/* Main Obsidian 3D Choreography Container — full-bleed spatial canvas extending edge-to-edge under left story segments */}
       <div className="relative bg-[#070B14] overflow-x-clip">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 lg:grid-cols-12 lg:gap-12 items-start">
-            {/* Sticky Borderless 3D Stage */}
-            <div className="lg:col-span-6 lg:order-2 lg:sticky lg:top-16 pt-2 lg:py-6 w-full min-w-0">
-              <div className="relative h-[290px] sm:h-[380px] lg:h-[calc(100vh-6rem)] w-full overflow-hidden transform-gpu">
-                {/* Soft radial atmospheric spotlight seamlessly embedded in #070B14 */}
-                <div
-                  className="absolute inset-0 pointer-events-none"
-                  style={{
-                    background:
-                      'radial-gradient(circle at 50% 48%, rgba(36, 91, 219, 0.22) 0%, rgba(0, 210, 255, 0.06) 36%, rgba(7, 11, 20, 0) 68%)',
-                  }}
-                />
+        <div className="relative lg:grid">
+          {/* Sticky Borderless 3D Stage (mobile: top hero banner; desktop: edge-to-edge full-width sticky canvas under z-10 left column) */}
+          <div className="lg:col-start-1 lg:row-start-1 w-full min-w-0">
+            <div className="relative h-[290px] sm:h-[380px] lg:sticky lg:top-16 lg:h-[calc(100vh-4rem)] w-full overflow-hidden transform-gpu">
+              {/* Soft radial atmospheric spotlight aligned to right-weighted 3D composition on desktop */}
+              <div
+                className="hidden lg:block absolute inset-0 pointer-events-none"
+                style={{
+                  background:
+                    'radial-gradient(circle at 67% 48%, rgba(36, 91, 219, 0.24) 0%, rgba(0, 210, 255, 0.08) 32%, rgba(7, 11, 20, 0) 64%)',
+                }}
+              />
+              <div
+                className="lg:hidden absolute inset-0 pointer-events-none"
+                style={{
+                  background:
+                    'radial-gradient(circle at 50% 48%, rgba(36, 91, 219, 0.22) 0%, rgba(0, 210, 255, 0.06) 36%, rgba(7, 11, 20, 0) 68%)',
+                }}
+              />
 
-                {webglReady ? (
-                  <Suspense
-                    fallback={
-                      <PrintPipelineFallback
-                        activeChapter={activeChapter}
-                        colorMode={colorMode}
-                        duplexMode={duplexMode}
-                      />
-                    }
-                  >
-                    <PrintPipelineCanvas
+              {webglReady ? (
+                <Suspense
+                  fallback={
+                    <PrintPipelineFallback
                       activeChapter={activeChapter}
                       colorMode={colorMode}
                       duplexMode={duplexMode}
-                      onContextLost={() => setWebglReady(false)}
                     />
-                  </Suspense>
-                ) : (
-                  <PrintPipelineFallback
+                  }
+                >
+                  <PrintPipelineCanvas
                     activeChapter={activeChapter}
                     colorMode={colorMode}
                     duplexMode={duplexMode}
+                    onContextLost={() => setWebglReady(false)}
                   />
-                )}
+                </Suspense>
+              ) : (
+                <PrintPipelineFallback
+                  activeChapter={activeChapter}
+                  colorMode={colorMode}
+                  duplexMode={duplexMode}
+                />
+              )}
 
-                {/* Minimal subtle B&W / Color switch tucked cleanly at bottom-right corner */}
-                <div className="absolute bottom-3 right-3 z-10">
-                  <div className="inline-flex items-center gap-1 bg-white/[0.04] p-1 rounded-full border border-white/10">
-                    <button
-                      type="button"
-                      onClick={() => setColorMode(false)}
-                      className={`px-2.5 py-1 rounded-full text-[11px] font-semibold transition-colors ${
-                        !colorMode
-                          ? 'bg-white text-[#070B14]'
-                          : 'text-slate-300 hover:text-white'
-                      }`}
-                    >
-                      {t('landing:ch2_bw')}
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setColorMode(true)}
-                      className={`px-2.5 py-1 rounded-full text-[11px] font-semibold transition-colors ${
-                        colorMode
-                          ? 'bg-[#00D2FF] text-[#070B14]'
-                          : 'text-slate-300 hover:text-white'
-                      }`}
-                    >
-                      {t('landing:ch2_color')}
-                    </button>
-                  </div>
+              {/* Subtle obsidian contrast veil over the left overlap zone so extended grid lines enrich depth without muting copy */}
+              <div
+                className="hidden lg:block absolute inset-0 pointer-events-none"
+                style={{
+                  background:
+                    'linear-gradient(90deg, rgba(7, 11, 20, 0.92) 0%, rgba(7, 11, 20, 0.76) 36%, rgba(7, 11, 20, 0.32) 50%, rgba(7, 11, 20, 0) 64%)',
+                }}
+              />
+
+              {/* Minimal subtle B&W / Color switch tucked cleanly at bottom-right corner */}
+              <div className="absolute bottom-3 right-3 lg:bottom-6 lg:right-8 z-20">
+                <div className="inline-flex items-center gap-1 bg-[#0B1222]/90 p-1 rounded-full border border-white/15">
+                  <button
+                    type="button"
+                    onClick={() => setColorMode(false)}
+                    className={`px-2.5 py-1 rounded-full text-[11px] font-semibold transition-colors ${
+                      !colorMode
+                        ? 'bg-white text-[#070B14]'
+                        : 'text-slate-300 hover:text-white'
+                    }`}
+                  >
+                    {t('landing:ch2_bw')}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setColorMode(true)}
+                    className={`px-2.5 py-1 rounded-full text-[11px] font-semibold transition-colors ${
+                      colorMode
+                        ? 'bg-[#00D2FF] text-[#070B14]'
+                        : 'text-slate-300 hover:text-white'
+                    }`}
+                  >
+                    {t('landing:ch2_color')}
+                  </button>
                 </div>
               </div>
             </div>
+          </div>
 
-            {/* Open-Air Editorial Storytelling Column */}
-            <div className="lg:col-span-6 lg:order-1 space-y-16 lg:space-y-0 min-w-0">
+          {/* Open-Air Editorial Storytelling Column layered cleanly above the extended 3D layer */}
+          <div className="relative z-10 lg:col-start-1 lg:row-start-1 w-full lg:pointer-events-none">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+              <div className="w-full lg:w-[48%] xl:w-[46%] lg:pointer-events-auto space-y-16 lg:space-y-0 min-w-0">
               {/* Chapter 0: Hero & Immediate Platform Brief */}
               <section
                 id="chapter-0"
@@ -373,7 +390,7 @@ export const LandingHome: React.FC = () => {
                     >
                       <Link
                         to="/owner/shop"
-                        className="flex items-center justify-between p-3.5 sm:p-4 rounded-xl border border-white/15 bg-white/[0.03] text-white font-bold text-sm hover:border-[#00D2FF]/60 transition-colors"
+                        className="flex items-center justify-between p-3.5 sm:p-4 rounded-xl border border-white/15 bg-[#0B1222]/85 text-white font-bold text-sm hover:border-[#00D2FF]/60 transition-colors"
                       >
                         <div className="flex items-center space-x-2.5">
                           <LogIn className="w-4 h-4 text-[#00D2FF] shrink-0" />
@@ -387,14 +404,14 @@ export const LandingHome: React.FC = () => {
                   <div className="pt-1 flex flex-wrap items-center gap-3">
                     <Link
                       to="/login"
-                      className="inline-flex items-center space-x-1.5 px-3.5 py-2 rounded-lg border border-white/15 bg-white/[0.03] hover:border-white/35 text-slate-200 font-semibold text-xs transition-colors"
+                      className="inline-flex items-center space-x-1.5 px-3.5 py-2 rounded-lg border border-white/15 bg-[#0B1222]/85 hover:border-white/35 text-slate-200 font-semibold text-xs transition-colors"
                     >
                       <LogIn className="w-3.5 h-3.5 text-[#00D2FF]" />
                       <span>{t('common:owner_login')}</span>
                     </Link>
                     <Link
                       to="/register"
-                      className="inline-flex items-center space-x-1.5 px-3.5 py-2 rounded-lg border border-white/15 bg-white/[0.03] hover:border-white/35 text-slate-200 font-semibold text-xs transition-colors"
+                      className="inline-flex items-center space-x-1.5 px-3.5 py-2 rounded-lg border border-white/15 bg-[#0B1222]/85 hover:border-white/35 text-slate-200 font-semibold text-xs transition-colors"
                     >
                       <UserPlus className="w-3.5 h-3.5 text-emerald-400" />
                       <span>{t('common:register_new_shop')}</span>
@@ -563,10 +580,11 @@ export const LandingHome: React.FC = () => {
             </div>
           </div>
         </div>
+        </div>
 
         {/* Luminance Transition Bridge into Architectural Paper Section */}
         <div
-          className="h-16 sm:h-24 w-full"
+          className="relative z-10 h-16 sm:h-24 w-full"
           style={{
             background: 'linear-gradient(180deg, rgba(7,11,20,0) 0%, #F7F8FA 100%)',
           }}

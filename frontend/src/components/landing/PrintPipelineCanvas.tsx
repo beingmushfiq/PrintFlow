@@ -24,10 +24,10 @@ interface ChapterCameraPreset {
 }
 
 const CHAPTER_PRESETS: Record<number, ChapterCameraPreset> = {
-  0: { camX: 0.24, camY: 1.48, baseZ: 6.25, lookX: -0.1, lookY: 0.08, lookZ: 0.12, stageYaw: 0.0, ch1Focus: 0, ch2Focus: 0, ch3Focus: 0 },
-  1: { camX: -1.18, camY: 0.92, baseZ: 5.05, lookX: -1.08, lookY: 0.02, lookZ: 0.35, stageYaw: -0.14, ch1Focus: 1, ch2Focus: 0, ch3Focus: 0 },
-  2: { camX: 1.55, camY: 1.72, baseZ: 5.35, lookX: 0.42, lookY: 0.62, lookZ: -0.05, stageYaw: -0.26, ch1Focus: 0, ch2Focus: 1, ch3Focus: 0 },
-  3: { camX: 0.45, camY: 0.98, baseZ: 5.1, lookX: 0.25, lookY: -0.28, lookZ: 0.48, stageYaw: -0.35, ch1Focus: 0, ch2Focus: 0, ch3Focus: 1 },
+  0: { camX: 0.12, camY: 1.48, baseZ: 6.4, lookX: -0.04, lookY: 0.08, lookZ: 0.12, stageYaw: 0.0, ch1Focus: 0, ch2Focus: 0, ch3Focus: 0 },
+  1: { camX: -0.72, camY: 1.02, baseZ: 5.9, lookX: -0.36, lookY: 0.04, lookZ: 0.35, stageYaw: -0.1, ch1Focus: 1, ch2Focus: 0, ch3Focus: 0 },
+  2: { camX: 1.28, camY: 1.68, baseZ: 5.65, lookX: 0.18, lookY: 0.58, lookZ: -0.05, stageYaw: -0.24, ch1Focus: 0, ch2Focus: 1, ch3Focus: 0 },
+  3: { camX: 0.36, camY: 1.02, baseZ: 5.5, lookX: 0.06, lookY: -0.24, lookZ: 0.45, stageYaw: -0.32, ch1Focus: 0, ch2Focus: 0, ch3Focus: 1 },
 };
 
 function createRoundedRectShape(width: number, height: number, radius: number): THREE.Shape {
@@ -365,7 +365,13 @@ export const PrintPipelineCanvas: React.FC<PrintPipelineCanvasProps> = ({
     renderer.domElement.addEventListener('webglcontextlost', handleContextLost);
 
     const scene = new THREE.Scene();
+    scene.fog = new THREE.FogExp2(0x070b14, 0.042);
     const camera = new THREE.PerspectiveCamera(40, width / height, 0.1, 60);
+    let isDesktopWide = width >= 1000 && width / height >= 1.2;
+    if (isDesktopWide) {
+      camera.setViewOffset(width, height, -Math.round(width * 0.185), 0, width, height);
+    }
+    camera.updateProjectionMatrix();
 
     // Lightweight 3-light studio rig (zero expensive PMREM / RoomEnvironment bake!)
     const hemiLight = new THREE.HemisphereLight(0xe0f2fe, 0x0b1222, 1.35);
@@ -421,12 +427,12 @@ export const PrintPipelineCanvas: React.FC<PrintPipelineCanvasProps> = ({
     const stageGroup = new THREE.Group();
     scene.add(stageGroup);
 
-    // 1. Circular polar floor grid — naturally fades into borderless Obsidian with zero rectangular edge cutoff!
-    const floorGrid = new THREE.PolarGridHelper(3.35, 10, 5, 48, 0x245bdb, 0x101c36);
+    // 1. Wide circular polar floor grid — fades smoothly via fog into obsidian with zero hard cutoff
+    const floorGrid = new THREE.PolarGridHelper(4.8, 12, 6, 64, 0x245bdb, 0x101c36);
     floorGrid.position.set(0.05, -1.25, 0.25);
     const gridMat = floorGrid.material as THREE.Material;
     gridMat.transparent = true;
-    gridMat.opacity = 0.38;
+    gridMat.opacity = 0.34;
     materials.push(gridMat);
     geometries.push(floorGrid.geometry);
     stageGroup.add(floorGrid);
@@ -772,6 +778,12 @@ export const PrintPipelineCanvas: React.FC<PrintPipelineCanvasProps> = ({
       renderer.setPixelRatio(nextDpr);
       renderer.setSize(w, h, false);
       camera.aspect = w / h;
+      isDesktopWide = w >= 1000 && camera.aspect >= 1.2;
+      if (isDesktopWide) {
+        camera.setViewOffset(w, h, -Math.round(w * 0.185), 0, w, h);
+      } else {
+        camera.clearViewOffset();
+      }
       camera.updateProjectionMatrix();
     };
 
@@ -841,7 +853,13 @@ export const PrintPipelineCanvas: React.FC<PrintPipelineCanvasProps> = ({
         posAttr.needsUpdate = true;
       }
 
-      const aspectFit = camera.aspect < 1.15 ? 1.18 / Math.max(camera.aspect, 0.68) : 1.0;
+      const aspectFit = isDesktopWide
+        ? camera.aspect < 1.68
+          ? 1.68 / camera.aspect
+          : 1.0
+        : camera.aspect < 1.15
+          ? 1.18 / Math.max(camera.aspect, 0.68)
+          : 1.0;
       camera.position.set(
         st.camX + smoothMouse.x * 0.38,
         st.camY + smoothMouse.y * 0.24,
