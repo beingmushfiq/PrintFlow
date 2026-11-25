@@ -33,10 +33,10 @@ export const SmoothScrollProvider: React.FC<{ children: React.ReactNode }> = ({ 
     }
 
     const lenis = new Lenis({
-      duration: 1.05,
-      easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+      duration: 0.45,
+      easing: (t) => 1 - Math.pow(1 - t, 4),
       smoothWheel: true,
-      touchMultiplier: 1.5,
+      touchMultiplier: 1.25,
     });
 
     lenisRef.current = lenis;
@@ -47,7 +47,6 @@ export const SmoothScrollProvider: React.FC<{ children: React.ReactNode }> = ({ 
     };
 
     gsap.ticker.add(tick);
-    gsap.ticker.lagSmoothing(0);
 
     return () => {
       gsap.ticker.remove(tick);

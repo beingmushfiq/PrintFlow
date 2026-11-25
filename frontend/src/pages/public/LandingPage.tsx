@@ -2,9 +2,6 @@ import React, { useState, useEffect, useRef, Suspense, lazy } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { motion } from 'framer-motion';
-import gsap from 'gsap';
-import { ScrollTrigger } from 'gsap/ScrollTrigger';
-import { useGSAP } from '@gsap/react';
 import {
   Globe,
   ArrowRight,
@@ -27,9 +24,6 @@ import { usePageTitle } from '../../hooks/usePageTitle';
 import { apiRequest } from '../../lib/api';
 import { formatMoney } from '../../lib/money';
 import { PrintPipelineFallback } from '../../components/landing/PrintPipelineFallback';
-import type { HardwareModuleKey } from '../../components/landing/PrintPipelineCanvas';
-
-gsap.registerPlugin(useGSAP, ScrollTrigger);
 
 const PrintPipelineCanvas = lazy(() => import('../../components/landing/PrintPipelineCanvas'));
 
@@ -64,77 +58,49 @@ export const LandingHome: React.FC = () => {
   const [shops, setShops] = useState<PublicShopSummary[]>([]);
   const [selectedSlug, setSelectedSlug] = useState<string>('printflow-main');
   const [activeChapter, setActiveChapter] = useState<number>(0);
-  const [hoveredModule, setHoveredModule] = useState<HardwareModuleKey>(null);
   const [colorMode, setColorMode] = useState<boolean>(false);
   const [duplexMode, setDuplexMode] = useState<boolean>(true);
   const [webglReady, setWebglReady] = useState<boolean>(() => canUseWebGL());
 
-  const pageScopeRef = useRef<HTMLDivElement>(null);
-  const storyStageRef = useRef<HTMLDivElement>(null);
-  const scrollProgressRef = useRef<number>(0);
-  const lastChapterRef = useRef<number>(0);
+  const chapter0Ref = useRef<HTMLElement>(null);
+  const chapter1Ref = useRef<HTMLElement>(null);
+  const chapter2Ref = useRef<HTMLElement>(null);
+  const chapter3Ref = useRef<HTMLElement>(null);
 
-  useGSAP(
-    () => {
-      const isJsdom =
-        typeof navigator !== 'undefined' && navigator.userAgent.toLowerCase().includes('jsdom');
-      if (isJsdom) return;
+  // Single IntersectionObserver handles discrete chapter switching cleanly with zero scroll polling or inertia drift
+  useEffect(() => {
+    if (typeof IntersectionObserver === 'undefined') return;
 
-      const mm = gsap.matchMedia();
-      mm.add('(prefers-reduced-motion: no-preference)', () => {
-        gsap.from('.hero-stagger', {
-          y: 22,
-          opacity: 0,
-          duration: 0.65,
-          stagger: 0.08,
-          ease: 'power3.out',
-          clearProps: 'transform,opacity',
-        });
+    const sectionRefs: Array<{ idx: number; el: HTMLElement | null }> = [
+      { idx: 0, el: chapter0Ref.current },
+      { idx: 1, el: chapter1Ref.current },
+      { idx: 2, el: chapter2Ref.current },
+      { idx: 3, el: chapter3Ref.current },
+    ];
 
-        if (storyStageRef.current) {
-          ScrollTrigger.create({
-            trigger: storyStageRef.current,
-            start: 'top top',
-            end: 'bottom bottom',
-            scrub: true,
-            onUpdate: (self) => {
-              scrollProgressRef.current = self.progress;
-              const chapterIdx =
-                self.progress < 0.2
-                  ? 0
-                  : self.progress < 0.5
-                  ? 1
-                  : self.progress < 0.78
-                  ? 2
-                  : 3;
-              if (chapterIdx !== lastChapterRef.current) {
-                lastChapterRef.current = chapterIdx;
-                setActiveChapter(chapterIdx);
-              }
-            },
-          });
+    const observer = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          if (entry.isIntersecting) {
+            const match = sectionRefs.find((item) => item.el === entry.target);
+            if (match) {
+              setActiveChapter(match.idx);
+            }
+          }
         }
+      },
+      {
+        rootMargin: '-32% 0px -32% 0px',
+        threshold: 0.12,
+      }
+    );
 
-        gsap.utils.toArray<HTMLElement>('.story-card-reveal').forEach((card) => {
-          gsap.from(card, {
-            y: 36,
-            opacity: 0,
-            duration: 0.7,
-            ease: 'power3.out',
-            clearProps: 'transform,opacity',
-            scrollTrigger: {
-              trigger: card,
-              start: 'top 82%',
-              once: true,
-            },
-          });
-        });
-      });
+    sectionRefs.forEach(({ el }) => {
+      if (el) observer.observe(el);
+    });
 
-      return () => mm.revert();
-    },
-    { scope: pageScopeRef }
-  );
+    return () => observer.disconnect();
+  }, []);
 
   useEffect(() => {
     let active = true;
@@ -169,35 +135,37 @@ export const LandingHome: React.FC = () => {
   const isBengali = i18n.language.startsWith('bn');
   const locale = isBengali ? 'bn' : 'en';
 
-  // Live 2-page interactive quote sample (in integer Poisha) matching Chapter II toggles
   const sampleEstimatePoisha = !colorMode
     ? duplexMode
-      ? 500 // 1 physical B&W flat duplex sheet = ৳5.00
-      : 1000 // 2 B&W simplex sheets @ 500 = ৳10.00
+      ? 500
+      : 1000
     : duplexMode
-    ? 3000 // 1 Color flat duplex sheet (Model A) = ৳30.00
-    : 4000; // 2 Color simplex sheets @ 2000 = ৳40.00
+    ? 3000
+    : 4000;
 
   const activeTelemetryLabel =
-    hoveredModule === 'qr_intake'
+    activeChapter === 1
       ? t('landing:module_qr_intake')
-      : hoveredModule === 'poisha_duplex'
+      : activeChapter === 2
       ? t('landing:module_poisha_duplex')
-      : hoveredModule === 'win32_spooler'
+      : activeChapter === 3
       ? t('landing:module_win32_spooler')
       : t('landing:module_default');
 
-  const scrollToSection = (id: string) => {
-    const target = document.getElementById(id);
-    if (target) {
-      target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  const jumpToChapter = (chapterIdx: number, id?: string) => {
+    setActiveChapter(chapterIdx);
+    if (id) {
+      const target = document.getElementById(id);
+      if (target && typeof target.scrollIntoView === 'function') {
+        target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
     }
   };
 
   return (
-    <div ref={pageScopeRef} className="min-h-screen w-full max-w-full overflow-x-clip bg-[#070B14] text-white flex flex-col">
-      {/* Sticky Obsidian Glass Topbar */}
-      <header className="sticky top-0 z-30 w-full max-w-full overflow-hidden border-b border-white/10 bg-[#070B14]/90 backdrop-blur-md px-4 sm:px-6 lg:px-8 py-3.5">
+    <div className="min-h-screen w-full max-w-full overflow-x-clip bg-[#070B14] text-white flex flex-col">
+      {/* Sticky Solid Obsidian Topbar (zero backdrop-blur compositor thrash over WebGL) */}
+      <header className="sticky top-0 z-30 w-full max-w-full overflow-hidden border-b border-white/10 bg-[#070B14]/95 px-4 sm:px-6 lg:px-8 py-3.5">
         <div className="max-w-7xl mx-auto flex items-center justify-between gap-3 w-full">
           <div className="flex items-center space-x-3 flex-1 min-w-0 overflow-hidden">
             <Logo variant="mark" theme="white" size="md" />
@@ -214,21 +182,21 @@ export const LandingHome: React.FC = () => {
           <nav className="hidden md:flex items-center gap-6 text-xs font-semibold text-slate-300">
             <button
               type="button"
-              onClick={() => scrollToSection('chapter-1')}
+              onClick={() => jumpToChapter(1, 'chapter-1')}
               className="hover:text-[#00D2FF] transition-colors"
             >
               {t('landing:nav_workflow')}
             </button>
             <button
               type="button"
-              onClick={() => scrollToSection('chapter-2')}
+              onClick={() => jumpToChapter(2, 'chapter-2')}
               className="hover:text-[#00D2FF] transition-colors"
             >
               {t('landing:nav_pricing')}
             </button>
             <button
               type="button"
-              onClick={() => scrollToSection('chapter-3')}
+              onClick={() => jumpToChapter(3, 'chapter-3')}
               className="hover:text-[#00D2FF] transition-colors"
             >
               {t('landing:nav_security')}
@@ -248,19 +216,19 @@ export const LandingHome: React.FC = () => {
         </div>
       </header>
 
-      {/* Main Obsidian 3D Choreography Container (sticky WebGL stage beside 4 chapters on desktop) */}
-      <div ref={storyStageRef} className="relative bg-[#070B14] obsidian-grid-bg overflow-x-clip">
+      {/* Main Obsidian 3D Choreography Container (clean solid Obsidian backdrop avoids scroll gradient repaint) */}
+      <div className="relative bg-[#070B14] overflow-x-clip">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 lg:grid-cols-12 lg:gap-10 items-start">
-            {/* Sticky 3D Stage (Right side on Desktop lg+, Hero spotlight on Mobile) */}
+            {/* Sticky 3D Stage (compositor-isolated, zero backdrop-blur or oversized box-shadow) */}
             <div className="lg:col-span-6 lg:order-2 lg:sticky lg:top-16 pt-4 lg:py-8 w-full min-w-0">
-              <div className="relative h-[280px] sm:h-[360px] lg:h-[calc(100vh-7.5rem)] w-full rounded-3xl border border-white/10 bg-[#0C1427]/90 backdrop-blur-sm overflow-hidden shadow-[0_32px_80px_rgba(0,0,0,0.65)]">
-                {/* Ambient glow backdrop */}
+              <div className="relative h-[280px] sm:h-[360px] lg:h-[calc(100vh-7.5rem)] w-full rounded-3xl border border-white/10 bg-[#0A1120] overflow-hidden shadow-lg transform-gpu">
+                {/* Ambient radial glow backdrop */}
                 <div
                   className="absolute inset-0 pointer-events-none"
                   style={{
                     background:
-                      'radial-gradient(circle at 52% 45%, rgba(36, 91, 219, 0.34) 0%, rgba(0, 210, 255, 0.1) 42%, transparent 74%)',
+                      'radial-gradient(circle at 52% 45%, rgba(36, 91, 219, 0.25) 0%, rgba(0, 210, 255, 0.08) 42%, transparent 72%)',
                   }}
                 />
 
@@ -275,10 +243,9 @@ export const LandingHome: React.FC = () => {
                     }
                   >
                     <PrintPipelineCanvas
-                      scrollProgressRef={scrollProgressRef}
+                      activeChapter={activeChapter}
                       colorMode={colorMode}
                       duplexMode={duplexMode}
-                      onHoverModule={setHoveredModule}
                       onContextLost={() => setWebglReady(false)}
                     />
                   </Suspense>
@@ -290,23 +257,37 @@ export const LandingHome: React.FC = () => {
                   />
                 )}
 
-                {/* HUD Overlay Chrome */}
+                {/* Top HUD Overlay Bar (solid dark pills, zero blur over canvas) */}
                 <div className="absolute top-3.5 left-3.5 right-3.5 flex items-center justify-between gap-2 pointer-events-none">
-                  <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#070B14]/85 border border-white/15 backdrop-blur-md text-[11px] font-mono text-slate-200 max-w-[72%] min-w-0">
-                    <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse shrink-0" />
+                  <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#070B14]/95 border border-white/15 text-[11px] font-mono text-slate-200 max-w-[64%] min-w-0">
+                    <span className="w-2 h-2 rounded-full bg-emerald-400 shrink-0" />
                     <span className="truncate">{activeTelemetryLabel}</span>
                   </div>
-                  <div className="px-2.5 py-1 rounded-full bg-[#070B14]/85 border border-white/15 text-[10px] font-mono tracking-wider text-[#00D2FF] uppercase shrink-0">
-                    {`0${activeChapter} / 03`}
+                  <div className="flex items-center gap-1 bg-[#070B14]/95 border border-white/15 p-1 rounded-full pointer-events-auto">
+                    {[0, 1, 2, 3].map((idx) => (
+                      <button
+                        key={idx}
+                        type="button"
+                        onClick={() => jumpToChapter(idx, `chapter-${idx}`)}
+                        aria-label={`Stage 0${idx}`}
+                        className={`px-2 py-0.5 rounded-full text-[10px] font-mono transition-colors ${
+                          activeChapter === idx
+                            ? 'bg-[#245BDB] text-white font-bold'
+                            : 'text-slate-400 hover:text-white'
+                        }`}
+                      >
+                        {`0${idx}`}
+                      </button>
+                    ))}
                   </div>
                 </div>
 
-                {/* Quick interactive hardware lens bar at bottom of 3D viewport */}
+                {/* Bottom Quick Lens Controls */}
                 <div className="absolute bottom-3.5 left-3.5 right-3.5 flex items-center justify-between gap-2">
-                  <span className="hidden sm:inline-block text-[11px] font-mono text-slate-300 bg-[#070B14]/80 px-2.5 py-1 rounded-lg border border-white/15">
-                    {t('landing:stage_indicator')}
+                  <span className="hidden sm:inline-block text-[11px] font-mono text-slate-300 bg-[#070B14]/95 px-2.5 py-1 rounded-lg border border-white/15">
+                    {`0${activeChapter} / 03 • ${t('landing:stage_indicator')}`}
                   </span>
-                  <div className="flex items-center gap-1.5 ml-auto bg-[#070B14]/85 backdrop-blur-md p-1 rounded-xl border border-white/15">
+                  <div className="flex items-center gap-1.5 ml-auto bg-[#070B14]/95 p-1 rounded-xl border border-white/15">
                     <button
                       type="button"
                       onClick={() => setColorMode(false)}
@@ -334,16 +315,20 @@ export const LandingHome: React.FC = () => {
               </div>
             </div>
 
-            {/* Scroll Storytelling Column (Left side on Desktop lg+) */}
+            {/* Scroll Storytelling Column */}
             <div className="lg:col-span-6 lg:order-1 space-y-10 lg:space-y-0 min-w-0">
               {/* Chapter 0: Hero & Immediate Platform Brief */}
-              <section className="min-h-[auto] lg:min-h-[calc(100vh-4.5rem)] py-6 sm:py-10 lg:py-16 flex flex-col justify-center space-y-5 sm:space-y-6">
-                <div className="hero-stagger inline-flex items-center gap-2 self-start px-3.5 py-1.5 rounded-full border border-[#00D2FF]/35 bg-[#00D2FF]/15 text-[#00D2FF] text-xs font-semibold tracking-wide">
+              <section
+                id="chapter-0"
+                ref={chapter0Ref}
+                className="min-h-[auto] lg:min-h-[calc(100vh-4.5rem)] py-6 sm:py-10 lg:py-16 flex flex-col justify-center space-y-5 sm:space-y-6"
+              >
+                <div className="inline-flex items-center gap-2 self-start px-3.5 py-1.5 rounded-full border border-[#00D2FF]/35 bg-[#00D2FF]/15 text-[#00D2FF] text-xs font-semibold tracking-wide">
                   <Sparkles className="w-3.5 h-3.5 shrink-0" />
                   <span>{t('common:hero_heading')}</span>
                 </div>
 
-                <div className="hero-stagger space-y-3.5">
+                <div className="space-y-3.5">
                   <h2 className="font-display text-3xl sm:text-5xl font-bold text-white tracking-tight leading-[1.12]">
                     {t('common:hero_title')}
                   </h2>
@@ -356,7 +341,7 @@ export const LandingHome: React.FC = () => {
                 </div>
 
                 {/* Inline Platform Capabilities Proof Row */}
-                <div className="hero-stagger flex flex-wrap gap-2">
+                <div className="flex flex-wrap gap-2">
                   <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#0C1427] border border-white/10 text-xs font-medium text-slate-200">
                     <QrCode className="w-3.5 h-3.5 text-[#00D2FF]" />
                     <span>{t('landing:pill_zero_app')}</span>
@@ -372,7 +357,7 @@ export const LandingHome: React.FC = () => {
                 </div>
 
                 {/* Shop Selector + Primary Actions Dock */}
-                <div className="hero-stagger rounded-2xl border border-white/15 bg-[#0C1427]/95 p-4 sm:p-5 space-y-4 shadow-xl">
+                <div className="rounded-2xl border border-white/15 bg-[#0C1427] p-4 sm:p-5 space-y-4 shadow-xl">
                   {shops.length > 1 && (
                     <div className="space-y-1.5">
                       <label
@@ -463,9 +448,10 @@ export const LandingHome: React.FC = () => {
               {/* Chapter I: Zero-App QR Counter Intake & Security Shield */}
               <section
                 id="chapter-1"
+                ref={chapter1Ref}
                 className="lg:min-h-[76vh] flex items-center py-4 lg:py-16"
               >
-                <div className="story-card-reveal w-full rounded-3xl border border-white/10 bg-[#0C1427]/95 p-6 sm:p-8 space-y-5 shadow-2xl">
+                <div className="w-full rounded-3xl border border-white/10 bg-[#0C1427] p-6 sm:p-8 space-y-5 shadow-md">
                   <div className="flex items-center justify-between">
                     <span className="font-mono text-xs font-bold uppercase tracking-widest text-[#00D2FF]">
                       {t('landing:ch1_step')}
@@ -496,9 +482,10 @@ export const LandingHome: React.FC = () => {
               {/* Chapter II: Zero-Float Poisha Math & Interactive 3D Sheet Control */}
               <section
                 id="chapter-2"
+                ref={chapter2Ref}
                 className="lg:min-h-[76vh] flex items-center py-4 lg:py-16"
               >
-                <div className="story-card-reveal w-full rounded-3xl border border-white/10 bg-[#0C1427]/95 p-6 sm:p-8 space-y-5 shadow-2xl">
+                <div className="w-full rounded-3xl border border-white/10 bg-[#0C1427] p-6 sm:p-8 space-y-5 shadow-md">
                   <div className="flex items-center justify-between">
                     <span className="font-mono text-xs font-bold uppercase tracking-widest text-emerald-400">
                       {t('landing:ch2_step')}
@@ -552,9 +539,10 @@ export const LandingHome: React.FC = () => {
               {/* Chapter III: Autonomous Win32 Printing & Ephemeral Zero-Trace Shred */}
               <section
                 id="chapter-3"
+                ref={chapter3Ref}
                 className="lg:min-h-[76vh] flex items-center py-4 pb-16 lg:py-16 lg:pb-24"
               >
-                <div className="story-card-reveal w-full rounded-3xl border border-white/10 bg-[#0C1427]/95 p-6 sm:p-8 space-y-5 shadow-2xl">
+                <div className="w-full rounded-3xl border border-white/10 bg-[#0C1427] p-6 sm:p-8 space-y-5 shadow-md">
                   <div className="flex items-center justify-between">
                     <span className="font-mono text-xs font-bold uppercase tracking-widest text-blue-400">
                       {t('landing:ch3_step')}

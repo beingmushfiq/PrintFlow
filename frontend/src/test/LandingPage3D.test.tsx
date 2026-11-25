@@ -80,4 +80,19 @@ describe('3D Storytelling LandingPage & Hero', () => {
     expect(screen.getByText('৳৫.০০')).toBeInTheDocument();
     expect(screen.queryByText(/landing\./i)).not.toBeInTheDocument();
   });
+
+  it('switches stage telemetry label when clicking discrete chapter pills', async () => {
+    render(
+      <MemoryRouter>
+        <LandingHome />
+      </MemoryRouter>
+    );
+
+    await screen.findByLabelText(/Select Print Shop/i);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Stage 02' }));
+    expect(screen.getByText(/Duplex Poisha Engine • Live Sheet Split/i)).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Stage 03' }));
+    expect(screen.getByText(/PrintFlow Agent • Win32 Spooler & Shred/i)).toBeInTheDocument();
+  });
 });
