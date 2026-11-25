@@ -31,7 +31,8 @@ describe('Logo Component', () => {
 
   it('applies custom sizing correctly', () => {
     const { container } = render(<Logo size="xl" />);
-    expect(container.querySelector('svg')).toHaveAttribute('width', '64');
-    expect(container.querySelector('svg')).toHaveAttribute('height', '64');
+    const markEl = container.querySelector('img, svg');
+    expect(markEl).toHaveAttribute('width', '64');
+    expect(markEl).toHaveAttribute('height', '64');
   });
 });

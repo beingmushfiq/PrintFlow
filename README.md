@@ -1,8 +1,15 @@
-# PrintFlow
+<p align="center">
+  <a href="https://devcenterpoint.com">
+    <img src="docs/assets/devcenterpoint-logo.png" alt="DevCenterPoint — Code. Build. Deploy. Scale." width="200" />
+  </a>
+</p>
 
-### Smart Printing. Simplified.
+<h1 align="center">PrintFlow</h1>
+<h3 align="center">Smart Printing. Simplified.</h3>
 
-**A production-ready, QR-powered printing automation ecosystem that connects walk-in customers, print shops, online payments, and physical printers in one seamless, automated pipeline.**
+<p align="center">
+  <strong>A production-ready, QR-powered printing automation ecosystem by <a href="https://devcenterpoint.com">DevCenterPoint</a> that connects walk-in customers, print shops, online payments, and physical printers in one seamless, automated pipeline.</strong>
+</p>
 
 <p align="center">
   <a href="https://devcenterpoint.com">
