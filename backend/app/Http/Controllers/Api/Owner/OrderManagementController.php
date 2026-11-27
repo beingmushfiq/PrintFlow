@@ -84,6 +84,8 @@ class OrderManagementController extends Controller
             $status = (string) $request->input('status');
             if (strtoupper($status) === 'COLLECTED') {
                 $query->whereIn('status', ['collected', 'COLLECTED']);
+            } elseif (strtoupper($status) === 'READY') {
+                $query->whereIn('status', ['ready', 'READY', 'complete', 'printed', 'PRINTED']);
             } else {
                 $query->where('status', $status);
             }

@@ -75,16 +75,20 @@ class OutboxProcessor
                                     ->get();
                             }
 
+                            $inferredDuplex = ((int) ($order->quote_snapshot_json['breakdown']['duplex_sheets'] ?? 0)) > 0;
                             $defaultSettings = [
                                 'copies' => 1,
                                 'color' => false,
-                                'duplex' => true,
+                                'color_mode' => 'mono',
+                                'duplex' => $inferredDuplex,
+                                'sides_mode' => $inferredDuplex ? 'duplex' : 'simplex',
                                 'paper_size' => 'A4',
                                 'orientation' => 'portrait',
                             ];
-                            $printSettings = $order->quote_snapshot_json['print_options']
+                            $savedOptions = $order->quote_snapshot_json['print_options']
                                 ?? $order->quote_snapshot_json['breakdown']['print_options']
-                                ?? $defaultSettings;
+                                ?? [];
+                            $printSettings = array_merge($defaultSettings, is_array($savedOptions) ? $savedOptions : []);
 
                             foreach ($orderFiles as $file) {
                                 $idempotencyKey = self::generateJobIdempotencyKey($order->id, (string) $file->id, 1);

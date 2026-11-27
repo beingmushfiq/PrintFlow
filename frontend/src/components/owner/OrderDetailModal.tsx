@@ -73,7 +73,7 @@ export const OrderDetailModal: React.FC<OrderDetailModalProps> = ({
     if (s === 'COLLECTED' || s === 'COMPLETED') {
       return <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-status-success/15 text-status-success">Collected</span>;
     }
-    if (s === 'READY' || s === 'PRINTED') {
+    if (s === 'READY' || s === 'PRINTED' || s === 'COMPLETE') {
       return <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-accent-soft text-accent">Ready for Pickup</span>;
     }
     if (s === 'PRINTING') {
@@ -82,10 +82,13 @@ export const OrderDetailModal: React.FC<OrderDetailModalProps> = ({
     if (s === 'CANCELLED') {
       return <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-status-error/15 text-status-error">Cancelled</span>;
     }
+    if (s === 'FAILED') {
+      return <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-status-error/15 text-status-error">Failed</span>;
+    }
     return <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-paper text-muted">{status}</span>;
   };
 
-  const canHandover = order && ['READY', 'PRINTED', 'printer_confirmed', 'ready', 'printed', 'completed', 'paid'].includes(order.status) && order.status !== 'COLLECTED';
+  const canHandover = order && ['READY', 'PRINTED', 'PRINTER_CONFIRMED', 'COMPLETE', 'COMPLETED', 'PAID'].includes((order.status || '').toUpperCase());
 
   return (
     <AnimatePresence>

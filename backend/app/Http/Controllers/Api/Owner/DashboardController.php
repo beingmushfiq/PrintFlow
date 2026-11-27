@@ -10,8 +10,7 @@ use App\Http\Responses\ApiResponse;
 use App\Models\Order;
 use App\Models\PrintAgent;
 use App\Models\PrintJob;
-use DateTime;
-use DateTimeZone;
+use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -31,9 +30,9 @@ class DashboardController extends Controller
             return ApiResponse::error('Shop not found.', 404, [], 'SHOP_NOT_FOUND');
         }
 
-        $dhakaTz = new DateTimeZone('Asia/Dhaka');
-        $todayStart = (new DateTime('today', $dhakaTz))->setTimezone(new DateTimeZone('UTC'));
-        $todayEnd = (new DateTime('tomorrow', $dhakaTz))->setTimezone(new DateTimeZone('UTC'));
+        $appTz = (string) config('app.timezone', 'UTC');
+        $todayStart = Carbon::now('Asia/Dhaka')->startOfDay()->setTimezone($appTz);
+        $todayEnd = Carbon::now('Asia/Dhaka')->endOfDay()->setTimezone($appTz);
 
         $todayOrdersQuery = Order::withoutTenant()
             ->where('shop_id', $shop->id)
@@ -43,7 +42,14 @@ class DashboardController extends Controller
 
         $todayRevenuePoisha = (int) Order::withoutTenant()
             ->where('shop_id', $shop->id)
-            ->whereIn('status', ['paid', 'completed', 'collected', 'PRINTED', 'COLLECTED', 'PAID'])
+            ->whereIn('status', [
+                'paid', 'PAID',
+                'printing', 'PRINTING',
+                'ready', 'READY',
+                'printed', 'PRINTED',
+                'complete', 'completed', 'COMPLETED',
+                'collected', 'COLLECTED',
+            ])
             ->whereBetween('created_at', [$todayStart, $todayEnd])
             ->sum('total_minor');
 

@@ -60,4 +60,35 @@ describe('OrderStatusPage localization and stage rendering', () => {
     expect(screen.getByText('৳১০.০০')).toBeInTheDocument();
     expect(screen.getByText('রসিদ দেখুন / প্রিন্ট করুন')).toBeInTheDocument();
   });
+
+  it('displays print failure alert when print_failed is true', async () => {
+    mockApiRequest.mockResolvedValue({
+      data: {
+        reference: 'PF-FAIL-101',
+        status: 'failed',
+        stages: ['SUBMITTED', 'UPLOADED', 'PAID', 'PRINTING', 'READY', 'COLLECTED'],
+        current_stage: 3,
+        print_failed: true,
+        shop_name: 'ODC',
+        channel: 'order.fail-token',
+        currency: 'BDT',
+        total_minor: 500,
+        total_bdt: '৳ ৫.০০',
+        created_at: '2026-11-27T14:51:20Z',
+        is_terminal: true,
+      },
+    });
+
+    render(
+      <MemoryRouter initialEntries={['/order/fail-token']}>
+        <Routes>
+          <Route path="/order/:token" element={<OrderStatusPage />} />
+        </Routes>
+      </MemoryRouter>
+    );
+
+    await waitFor(() => {
+      expect(screen.getByText('Printer Needs Attention')).toBeInTheDocument();
+    });
+  });
 });

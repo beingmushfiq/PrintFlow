@@ -51,6 +51,7 @@ class PublicOrderController extends Controller
             'uploaded' => 1,
             'paid' => 2,
             'printing' => 3,
+            'failed' => 3,
             'ready' => 4,
             'complete' => 4,
             'printed' => 4,
@@ -61,7 +62,14 @@ class PublicOrderController extends Controller
         $currentStatusLower = strtolower($order->status);
         $currentStageIndex = $stageIndexMap[$currentStatusLower] ?? 0;
 
-        $isTerminal = in_array($currentStatusLower, ['collected', 'completed', 'cancelled'], true);
+        $hasFailedPrintJob = $currentStatusLower === 'failed'
+            || (
+                $currentStatusLower === 'printing'
+                && $order->printJobs()->withoutTenant()->where('status', 'failed')->exists()
+                && ! $order->printJobs()->withoutTenant()->whereIn('status', ['queued', 'leased', 'printing', 'completed'])->exists()
+            );
+
+        $isTerminal = in_array($currentStatusLower, ['collected', 'completed', 'cancelled', 'failed'], true);
 
         // Security requirement: object_key, customer_phone, tenant_id must NEVER be in public response
         $data = [
@@ -69,6 +77,7 @@ class PublicOrderController extends Controller
             'status' => $order->status,
             'stages' => $stages,
             'current_stage' => $currentStageIndex,
+            'print_failed' => $hasFailedPrintJob,
             'shop_name' => $shop?->name ?? 'Print Shop',
             'channel' => "order.{$token}",
             'currency' => $order->currency,

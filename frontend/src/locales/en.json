@@ -168,6 +168,8 @@
     "load_failed": "Failed to load order status.",
     "order_collected_title": "Order Collected Successfully",
     "order_collected_desc": "Handed over to customer at {{time}}.",
+    "print_failed_title": "Printer Needs Attention",
+    "print_failed_desc": "Printing stalled or was cancelled at the counter printer. Please inform counter staff for a reprint.",
     "counter_fallback": "counter",
     "stage_submitted": "Submitted",
     "stage_queued": "Order Received",

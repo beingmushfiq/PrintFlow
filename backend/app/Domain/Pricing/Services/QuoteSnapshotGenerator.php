@@ -16,9 +16,9 @@ class QuoteSnapshotGenerator
     /**
      * Freeze quote snapshot and persist Quote model for the given Order.
      */
-    public function generate(Order $order, QuoteSnapshotData $data, ?string $priceProfileId = null): Quote
+    public function generate(Order $order, QuoteSnapshotData $data, ?string $priceProfileId = null, array $printOptions = []): Quote
     {
-        return DB::transaction(function () use ($order, $data, $priceProfileId) {
+        return DB::transaction(function () use ($order, $data, $priceProfileId, $printOptions) {
             $latestVersion = (int) Quote::withoutTenant()
                 ->where('order_id', $order->id)
                 ->max('quote_version');
@@ -71,6 +71,7 @@ class QuoteSnapshotGenerator
                     'quote_version' => $nextVersion,
                     'calculation_hash' => $calculationHash,
                     'expires_at' => $expiresAt->toISOString(),
+                    'print_options' => $printOptions,
                     'breakdown' => $data->toArray(),
                 ],
             ]);

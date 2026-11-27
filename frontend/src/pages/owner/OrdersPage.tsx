@@ -69,12 +69,17 @@ export const OrdersPage: React.FC = () => {
     }
   };
 
+  const canHandoverOrder = (status: string) => {
+    const s = (status || '').toUpperCase();
+    return ['READY', 'PRINTED', 'PRINTER_CONFIRMED', 'PAID', 'COMPLETE', 'COMPLETED'].includes(s);
+  };
+
   const getStatusBadge = (status: string) => {
     const s = (status || '').toUpperCase();
     if (s === 'COLLECTED') {
       return <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-status-success/15 text-status-success uppercase">Collected</span>;
     }
-    if (s === 'READY' || s === 'PRINTED') {
+    if (s === 'READY' || s === 'PRINTED' || s === 'COMPLETE') {
       return <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-accent-soft text-accent uppercase">Ready</span>;
     }
     if (s === 'PRINTING') {
@@ -190,7 +195,7 @@ export const OrdersPage: React.FC = () => {
                       <span>View</span>
                     </button>
 
-                    {['READY', 'PRINTED', 'printer_confirmed', 'paid', 'completed'].includes(o.status) && o.status !== 'COLLECTED' && (
+                    {canHandoverOrder(o.status) && (
                       <button
                         onClick={() => handleHandover(o.id)}
                         className="flex-1 min-w-[90px] inline-flex items-center justify-center space-x-1 px-3 py-2 rounded-lg border border-border bg-surface hover:bg-status-success/10 text-status-success text-xs font-medium transition-colors"
@@ -264,7 +269,7 @@ export const OrdersPage: React.FC = () => {
                         <span>View</span>
                       </button>
 
-                      {['READY', 'PRINTED', 'printer_confirmed', 'paid', 'completed'].includes(o.status) && o.status !== 'COLLECTED' && (
+                      {canHandoverOrder(o.status) && (
                         <button
                           onClick={() => handleHandover(o.id)}
                           className="inline-flex items-center space-x-1 px-2.5 py-1.5 rounded-lg border border-border bg-surface hover:bg-status-success/10 text-status-success text-xs font-medium transition-colors"

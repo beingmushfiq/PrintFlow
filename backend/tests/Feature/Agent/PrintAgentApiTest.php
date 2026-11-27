@@ -707,4 +707,80 @@ class PrintAgentApiTest extends TestCase
             ->assertJsonPath('data.status', 'complete')
             ->assertJsonPath('data.current_stage', 4);
     }
+
+    public function test_permanent_agent_job_failure_marks_order_failed_not_ready(): void
+    {
+        $rawToken = 'pfa_fail_test_token';
+        PrintAgent::create([
+            'tenant_id' => $this->tenant->id,
+            'shop_id' => $this->shop->id,
+            'device_name' => 'Counter Fail Test Agent',
+            'device_uuid' => 'guid-fail-test',
+            'public_key_hash' => 'pubkey-fail-test',
+            'agent_token' => hash('sha256', $rawToken),
+            'agent_token_hash' => hash('sha256', $rawToken),
+            'status' => 'online',
+        ]);
+
+        $orderToken = 'fail_order_token_123456';
+        $order = Order::create([
+            'tenant_id' => $this->tenant->id,
+            'shop_id' => $this->shop->id,
+            'customer_phone' => '01711223344',
+            'public_reference' => 'PF-FAIL-101',
+            'public_token_hash' => hash('sha256', $orderToken),
+            'status' => 'paid',
+        ]);
+
+        $orderFile = OrderFile::create([
+            'tenant_id' => $this->tenant->id,
+            'shop_id' => $this->shop->id,
+            'order_id' => $order->id,
+            'original_name' => 'stuck.pdf',
+            'mime_type_detected' => 'application/pdf',
+            'size_bytes' => 1024,
+            'page_count' => 1,
+            'storage_disk' => 'local',
+            'object_key' => 'orders/stuck.pdf',
+            'sha256_hash' => hash('sha256', 'stuck'),
+            'scan_status' => 'clean',
+            'processing_status' => 'processed',
+        ]);
+
+        $job = PrintJob::create([
+            'tenant_id' => $this->tenant->id,
+            'shop_id' => $this->shop->id,
+            'order_id' => $order->id,
+            'order_file_id' => $orderFile->id,
+            'status' => 'queued',
+            'print_settings' => ['copies' => 1],
+            'file_hash' => hash('sha256', 'stuck'),
+            'file_size_bytes' => 1024,
+            'pages_total' => 1,
+            'idempotency_key' => 'idemp_'.Str::random(32),
+        ]);
+
+        $leaseRes = $this->withHeader('Authorization', 'Bearer '.$rawToken)
+            ->postJson('/api/v1/agent/jobs/next');
+        $leaseToken = $leaseRes->json('data.lease_token');
+
+        $this->withHeader('Authorization', 'Bearer '.$rawToken)
+            ->postJson("/api/v1/agent/jobs/{$job->id}/fail", [
+                'lease_token' => $leaseToken,
+                'error_code' => 'WIN32_PRINT_ERROR',
+                'error_message' => 'Print job was cancelled in the Windows print queue.',
+                'retryable' => false,
+            ])
+            ->assertStatus(200)
+            ->assertJsonPath('data.status', 'failed');
+
+        $order->refresh();
+        $this->assertEquals('failed', $order->status);
+
+        $this->getJson("/api/v1/public/order/{$orderToken}")
+            ->assertStatus(200)
+            ->assertJsonPath('data.status', 'failed')
+            ->assertJsonPath('data.print_failed', true)
+            ->assertJsonPath('data.current_stage', 3);
+    }
 }

@@ -52,8 +52,10 @@ export const DashboardPage: React.FC = () => {
     { scope: gridRef }
   );
 
-  const fetchMetrics = async () => {
-    setLoading(true);
+  const fetchMetrics = async (silent = false) => {
+    if (!silent) {
+      setLoading(true);
+    }
     try {
       const res = await apiRequest('/owner/dashboard/metrics');
       setMetrics(res.data);
@@ -61,13 +63,15 @@ export const DashboardPage: React.FC = () => {
     } catch (err: any) {
       setError(err?.message || 'Failed to load dashboard metrics');
     } finally {
-      setLoading(false);
+      if (!silent) {
+        setLoading(false);
+      }
     }
   };
 
   useEffect(() => {
     fetchMetrics();
-    const interval = setInterval(fetchMetrics, 15000); // 15s auto-refresh
+    const interval = setInterval(() => fetchMetrics(true), 5000); // 5s live sync
     return () => clearInterval(interval);
   }, []);
 
@@ -94,7 +98,7 @@ export const DashboardPage: React.FC = () => {
 
         <div className="flex items-center space-x-3">
           <button
-            onClick={fetchMetrics}
+            onClick={() => fetchMetrics(false)}
             disabled={loading}
             className="p-2 rounded-xl border border-border bg-surface hover:bg-paper transition-colors text-muted hover:text-ink"
             aria-label="Refresh metrics"

@@ -57,6 +57,7 @@ class QuoteController extends Controller
             'color_mode' => 'nullable|string|in:mono,color',
             'sides_mode' => 'nullable|string|in:simplex,duplex',
             'paper_size' => 'nullable|string|in:A4,Legal',
+            'orientation' => 'nullable|string|in:portrait,landscape,auto',
             'file_id' => 'nullable|string',
             'duplex_model' => 'nullable|string|in:model_a,model_b',
         ]);
@@ -134,7 +135,17 @@ class QuoteController extends Controller
         );
 
         $quoteData = $this->pricingEngine->calculate($pricingRequest);
-        $quote = $this->quoteGenerator->generate($order, $quoteData, $activeProfileId);
+        $printOptions = [
+            'copies' => $copies,
+            'color' => $colorMode === 'color',
+            'color_mode' => $colorMode,
+            'duplex' => $sidesMode === 'duplex',
+            'sides_mode' => $sidesMode,
+            'paper_size' => $paperSize,
+            'page_range' => $pageRange,
+            'orientation' => (string) ($validated['orientation'] ?? ($files->first()?->orientation ?: 'portrait')),
+        ];
+        $quote = $this->quoteGenerator->generate($order, $quoteData, $activeProfileId, $printOptions);
 
         return ApiResponse::success([
             'quote' => [

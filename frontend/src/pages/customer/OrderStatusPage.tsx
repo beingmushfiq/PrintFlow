@@ -1,7 +1,7 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { motion } from 'framer-motion';
+import { AnimatePresence, motion } from 'framer-motion';
 import { SNAPPY_EASE } from '../../components/common/MotionPrimitives';
 import {
   CheckCircle2,
@@ -36,6 +36,7 @@ interface OrderStatusData {
   paid_at?: string;
   completed_at?: string;
   collected_at?: string;
+  print_failed?: boolean;
   is_terminal?: boolean;
 }
 
@@ -48,6 +49,8 @@ export const OrderStatusPage: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
 
   const isBengali = i18n.language.startsWith('bn');
+  const prevStatusRef = useRef<string>('');
+
   const toggleLanguage = () => {
     const nextLang = isBengali ? 'en' : 'bn';
     i18n.changeLanguage(nextLang);
@@ -82,6 +85,22 @@ export const OrderStatusPage: React.FC = () => {
     const interval = setInterval(fetchStatus, 3000);
     return () => clearInterval(interval);
   }, [token]);
+
+  // Fire confetti exactly once when order transitions to COLLECTED
+  useEffect(() => {
+    if (!order) return;
+    const currentStatus = order.status.toLowerCase();
+    if (
+      currentStatus !== prevStatusRef.current &&
+      (currentStatus === 'collected' || currentStatus === 'completed')
+    ) {
+      import('canvas-confetti').then((mod) => {
+        const confetti = mod.default;
+        confetti({ particleCount: 90, spread: 65, origin: { y: 0.55 }, colors: ['#059669', '#10b981', '#6ee7b7'] });
+      });
+    }
+    prevStatusRef.current = currentStatus;
+  }, [order?.status]);
 
   if (isLoading) {
     return (
@@ -176,18 +195,44 @@ export const OrderStatusPage: React.FC = () => {
         </div>
 
         {/* Collection Handover Badge when Collected */}
-        {order.is_terminal && (order.status.toLowerCase() === 'collected' || order.status.toLowerCase() === 'completed') && (
-          <div className="p-4 bg-emerald-50 border border-emerald-200 rounded-xl flex items-center gap-3 text-emerald-800">
-            <CheckCircle2 className="w-6 h-6 text-emerald-600 shrink-0" />
-            <div>
-              <div className="font-bold text-sm">{t('order_status:order_collected_title')}</div>
-              <div className="text-xs text-emerald-700">
-                {t('order_status:order_collected_desc', {
-                  time: order.collected_at
-                    ? new Date(order.collected_at).toLocaleTimeString(isBengali ? 'bn-BD' : 'en-US')
-                    : t('order_status:counter_fallback'),
-                })}
+        <AnimatePresence>
+          {order.is_terminal && (order.status.toLowerCase() === 'collected' || order.status.toLowerCase() === 'completed') && (
+            <motion.div
+              key="collected-banner"
+              initial={{ opacity: 0, y: 14, scale: 0.96 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: -8, scale: 0.97 }}
+              transition={{ duration: 0.45, ease: SNAPPY_EASE }}
+              className="p-4 bg-emerald-50 border border-emerald-200 rounded-xl flex items-center gap-3 text-emerald-800"
+            >
+              <motion.div
+                initial={{ scale: 0, rotate: -30 }}
+                animate={{ scale: 1, rotate: 0 }}
+                transition={{ type: 'spring', stiffness: 380, damping: 18, delay: 0.15 }}
+              >
+                <CheckCircle2 className="w-6 h-6 text-emerald-600 shrink-0" />
+              </motion.div>
+              <div>
+                <div className="font-bold text-sm">{t('order_status:order_collected_title')}</div>
+                <div className="text-xs text-emerald-700">
+                  {t('order_status:order_collected_desc', {
+                    time: order.collected_at
+                      ? new Date(order.collected_at).toLocaleTimeString(isBengali ? 'bn-BD' : 'en-US')
+                      : t('order_status:counter_fallback'),
+                  })}
+                </div>
               </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Print Failure Alert */}
+        {(order.print_failed || order.status.toLowerCase() === 'failed') && (
+          <div className="p-4 bg-red-50 border border-red-200 rounded-xl flex items-center gap-3 text-red-800">
+            <AlertCircle className="w-6 h-6 text-red-600 shrink-0" />
+            <div>
+              <div className="font-bold text-sm">{t('order_status:print_failed_title')}</div>
+              <div className="text-xs text-red-700">{t('order_status:print_failed_desc')}</div>
             </div>
           </div>
         )}
@@ -205,20 +250,29 @@ export const OrderStatusPage: React.FC = () => {
 
           <div className="relative pl-6 space-y-8 before:absolute before:left-3 before:top-2 before:bottom-2 before:w-0.5 before:bg-slate-200">
             {order.stages.map((stageName, idx) => {
-              const isPast = idx < order.current_stage;
-              const isCurrent = idx === order.current_stage;
+              const isCollected =
+                order.status.toLowerCase() === 'collected' ||
+                order.status.toLowerCase() === 'completed';
+              const isPast = idx < order.current_stage || (isCollected && idx === order.current_stage);
+              const isCurrent = idx === order.current_stage && !isCollected;
               const displayLabel = stageLabels[stageName] || stageName;
 
               return (
                 <motion.div
-                  key={stageName}
+                  key={`${stageName}-${isPast ? 'past' : isCurrent ? 'current' : 'future'}`}
                   initial={{ opacity: 0, x: -8 }}
                   animate={{ opacity: 1, x: 0 }}
-                  transition={{ duration: 0.25, delay: idx * 0.04, ease: SNAPPY_EASE }}
+                  transition={{ duration: 0.3, delay: idx * 0.06, ease: SNAPPY_EASE }}
                   className="relative flex items-start gap-4"
                 >
                   {/* Circle Marker */}
-                  <div
+                  <motion.div
+                    key={`${stageName}-${isPast ? 'past' : isCurrent ? 'current' : 'future'}`}
+                    initial={isPast && (idx === order.current_stage - 1 || (isCollected && idx === order.current_stage))
+                      ? { scale: 1.3, backgroundColor: '#6366f1' }
+                      : { scale: 1 }}
+                    animate={{ scale: 1 }}
+                    transition={{ type: 'spring', stiffness: 420, damping: 20 }}
                     className={`absolute -left-6 w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ring-4 ring-white ${
                       isPast
                         ? 'bg-emerald-600 text-white'
@@ -228,7 +282,7 @@ export const OrderStatusPage: React.FC = () => {
                     }`}
                   >
                     {isPast ? '✓' : isBengali ? toBengaliNumerals(idx + 1) : idx + 1}
-                  </div>
+                  </motion.div>
 
                   {/* Stage Details */}
                   <div className="space-y-1">

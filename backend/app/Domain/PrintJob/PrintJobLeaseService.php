@@ -5,7 +5,9 @@ declare(strict_types=1);
 namespace App\Domain\PrintJob;
 
 use App\Domain\FileDeletion\Jobs\DeleteOrderFileRemotely;
+use App\Models\OrderEvent;
 use App\Models\PrintAgent;
+use App\Models\Printer;
 use App\Models\PrintJob;
 use App\Models\PrintJobAttempt;
 use DomainException;
@@ -80,10 +82,20 @@ class PrintJobLeaseService
                 );
             }
 
+            $targetPrinter = $job->printer_id
+                ? Printer::withoutTenant()->find($job->printer_id)
+                : Printer::withoutTenant()
+                    ->where('shop_id', $agent->shop_id)
+                    ->where('print_agent_id', $agent->id)
+                    ->where('is_default', true)
+                    ->where('status', '!=', 'disabled')
+                    ->first();
+
             return [
                 'job_id' => $job->id,
                 'order_id' => $job->order_id,
                 'order_file_id' => $job->order_file_id,
+                'target_printer_name' => $targetPrinter?->system_name ?? $targetPrinter?->name,
                 'lease_token' => $leaseToken,
                 'lease_expires_at' => $expiresAt->toIso8601String(),
                 'download_url' => $downloadUrl,
@@ -92,7 +104,7 @@ class PrintJobLeaseService
                 'print_settings' => $job->print_settings ?? [
                     'copies' => 1,
                     'color' => false,
-                    'duplex' => true,
+                    'duplex' => false,
                     'paper_size' => 'A4',
                     'orientation' => 'portrait',
                 ],
@@ -214,6 +226,26 @@ class PrintJobLeaseService
                 'status' => 'failed',
                 'failed_at' => now(),
                 'error_message' => $errorMessage,
+            ]);
+
+            $order = $job->order()->withoutTenant()->first();
+            if ($order && ! $order->printJobs()->withoutTenant()->where('status', '!=', 'failed')->exists()) {
+                $order->update(['status' => 'failed']);
+            }
+        }
+
+        if ($job->order_id) {
+            OrderEvent::create([
+                'tenant_id' => $job->tenant_id,
+                'shop_id' => $job->shop_id,
+                'order_id' => $job->order_id,
+                'event_type' => ($retryable && $attemptsCount < 3) ? 'job.requeued' : 'job.failed',
+                'from_status' => 'printing',
+                'to_status' => $job->status,
+                'actor_type' => 'agent',
+                'actor_id' => $job->print_agent_id,
+                'description' => $errorMessage ? "Print error ({$errorCode}): {$errorMessage}" : "Print error ({$errorCode})",
+                'created_at' => now(),
             ]);
         }
 
